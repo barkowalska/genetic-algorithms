@@ -31,6 +31,7 @@ int main()
 
 }
 
+//OMP 
 
  /*
     1 tworze objekt w mainie

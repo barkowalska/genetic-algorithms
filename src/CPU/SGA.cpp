@@ -76,7 +76,6 @@ double SGA::binary_decoding(const std::vector<bool>& location)
     phenotype+=m_min;
     return phenotype;
 }
-
 void SGA::cross_over( std::vector<bool>& locationA,  std::vector<bool>& locationB)
 {
     if(uniform_random(0.0,1.0)<m_Pc)
@@ -101,8 +100,9 @@ std::vector<SGA::Individual> SGA::selectionRWS()
         for(int i=0; i<m_popsize; i++)
         {
             sum+=2*M_PI*m_population[i].pi;
-            rws.push_back(sum);
-            if(rand<rws[i])
+            //rws.push_back(sum);
+            //if(rand<rws[i])
+            if(rand<sum)
             {
                 m_mating_pool.push_back(m_population[i]);
                 break;
