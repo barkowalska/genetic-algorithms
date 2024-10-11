@@ -2,6 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <ctime>
+#include <cub/cub.cuh>
 
 #include <curand_kernel.h>
 
@@ -43,9 +44,9 @@ __global__ void initialize(Population *population, unsigned long long seed, int 
 
 __device__ void construct_individuals(int min, int max, Population* population);
 
-__global__ void sum(Population* population, double* g_odata);
+//_global__ void sum(Population* population, double* g_odata);
 
-__global__ void sumFrommAllBlocks(double * g_odata, size_t blocksToSum);
+//__global__ void sumFrommAllBlocks(double * g_odata, size_t blocksToSum);
 
 __device__ void pi(Population *population, double* sum);
 
@@ -55,25 +56,65 @@ __global__ void cross_over(Population* mating_pool, unsigned long long seed);
 
 __global__ void mutattion(Population* mating_pool, unsigned long long seed);
 
-
+/*MOWIA ZE TO ZLE BO MARNUJE ZASOBY I ZYCIE CALE
 __device__ void cudaRand(double* output)
 {
-    int i=blockDim.x*blockIdx.x+theradIdx.x;
+    int i=blockDim.x*blockIdx.x+threadIdx.x;
+    if(i>=popsize) return;
     curandState state;
     curand_init((unsigned long long)clock() +i, 0, 0, &state);
 
     output[i]=curand_uniform_double(&state);
 }
+*/
 
-void run(dim3 block, dim3 grid, Population* population, Population* mating_pool)
+
+void sum(double* wskqualitySum, double** d_totalSum)
 {
+    cudaMalloc(d_totalSum, sizeof(double));
+
+    void* d_tempStorage = nullptr;
+    size_t tempStorageBytes = 0;
+
+    cub::DeviceReduce::Sum(d_tempStorage, tempStorageBytes, wskqualitySum, *d_totalSum, popsize);
+
+    cudaMalloc(&d_tempStorage, tempStorageBytes);
+
+    cub::DeviceReduce::Sum(d_tempStorage, tempStorageBytes, wskqualitySum, *d_totalSum, popsize);
+
+    cudaFree(d_tempStorage);
+}
+
+void run(dim3 block, dim3 grid, Population* population, Population* mating_pool, unsigned long long seed)
+{
+    /*
     double* suma;
     cudaMalloc(&suma, sizeof(double)*block.x);
+    Alokacja pamięci dla suma:
+??????
+    Alokujesz pamięć dla tablicy suma o rozmiarze block.x, co zakłada, że liczba bloków w siatce (grid) jest równa block.x.
+    Sugestia: Upewnij się, że block.x jest faktycznie liczbą bloków w siatce (gridDim.x), a nie rozmiarem bloku.*/
 
-    sum<<<grid, block, sizeof(double)*block.x>>> (population, popsize, suma);
+    /* blockDim.x określa rozmiar bloku wątku, a nie block.x.????????
+    sum<<<grid, block, sizeof(double)*block.x>>> (population, suma);
+    cudaDeviceSynchronize();
     sumFrommAllBlocks<<<1,1>>>(suma, block.x);
+*/
 
-    selectionRWS<<<grid, block>>>(population, suma, mating_pool, )
+//seed powinien byc tutaj zeby caly czas byl nowy, PRZENIESC?
+    double* d_total_sum=nullptr;
+    sum(population->quality,&d_total_sum);
+    cudaDeviceSynchronize();
+
+
+    selectionRWS<<<grid, block>>>(population, sum, mating_pool,seed );
+    cross_over<<<grid, block/2>>>(mating_pool, seed);
+    mutattion<<<grid, block>>>(mating_pool, seed);
+
+    //moge w mutation wstawic iniciajlize individual? gdzie jest cos o tej petli cuda
+    cudaDeviceSynchronize();
+
+   
 
 
 }
@@ -89,9 +130,9 @@ int main()
     int h_max=10;
     l_genes=60;
 
-    unsigned long long seed=1234ULL;
+    
 
-    dim3 block (blockSize,1); //dlaczego to nie deklaruje sie jako = cos tam
+    dim3 block (blockSize,1); 
     dim3 grid ((popsize+block.x-1)/block.x,1);
 
     //zaalokowac pamic na gpu na population
@@ -116,28 +157,60 @@ int main()
 
     cudaMemcpy(mating_pool, &h_mating_pool, sizeof(Population) , cudaMemcpyHostToDevice);
 
+   // Inicjalizacja seeda
+    unsigned long long seed = static_cast<unsigned long long>(time(NULL));
 
-    initialize<<<grid, block>>>(population, h_l_genes, h_popsize, seed, h_min, h_max); //teoretycznie 
+    initialize<<<grid, block>>>(population, h_l_genes, h_popsize, seed, h_min, h_max, seed); //teoretycznie 
+    cudaDeviceSynchronize();
     run();
 }
-
+/* stara wersja zła?
 __global__ void initialize(Population *population, unsigned long long seed, int min, int max)
 {
-    unsigned int i= blockDim.x*blockIdx.x+threadIdx.x;
-    //location
-    for(int k=0; k<l_genes; k++)
+    unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= popsize) return; 
+
+
+    for(int k = 0; k < l_genes; k++)
     {
-        curandState state;
-        curand_init(seed, i, 0, &state);
-        population->location[i*l_genes+k]=curand_uniform(&state) > 0.5f ? 1 : 0;
+        double d_rand[popsize];//zeby za kazdym razem bylo nowe losowanie?
+
+        cudaRand(d_rand);
+        int idx = i * l_genes + k; // Unique index for each gene
+        population->location[idx] = d_rand[idx] > 0.5 ? 1 : 0;
     }
 
     construct_individuals(min, max, population, l_genes, popsize);
+}*/
+
+//wersja poprawiona???
+
+__global__ void initialize(Population* population, unsigned long long seed, int min, int max, int l_genes, int popsize)
+{
+    unsigned int i = blockDim.x * blockIdx.x + threadIdx.x;
+    if (i >= popsize) return; 
+
+    // Inicjalizacja stanu losowego dla każdego wątku
+    curandState state;
+    curand_init(seed, i, 0, &state);
+
+    // Inicjalizacja genów
+    for (int k = 0; k < l_genes; k++)
+    {
+        int idx = i * l_genes + k; // Unikalny indeks dla każdego genu
+        float randNum = curand_uniform(&state);
+        population->location[idx] = randNum > 0.5f ? 1 : 0;
+    }
+
+    // Konstrukcja osobników (zakładając, że funkcja jest zdefiniowana gdzie indziej)
+    construct_individuals(min, max, population, l_genes);
 }
 
-__device__  void  construct_individuals(int min, int max, Population* population)
+
+__device__  void  construct_individuals(int min, int max, Population* population, int l_genes)
 {
     unsigned int i= blockDim.x*blockIdx.x+threadIdx.x;
+        if (i >= popsize) return; // Ensure we don't go out of bounds
 
      //phenotype
     int *sum= new int[popsize];
@@ -155,23 +228,22 @@ __device__  void  construct_individuals(int min, int max, Population* population
 
 }
 
+/*
 __global__ void sum(Population* population, double* g_odata)
 {    // Set thread ID
     unsigned int tid = threadIdx.x;
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= popsize) return; // Ensure we don't go out of bounds
 
     // Convert global data pointer to the local pointer of this block
     extern __shared__ double sdata[];
 
     // Load elements into shared memory (each thread loads one element)
-    if (idx < popsize) {
         sdata[tid] = population->quality[idx];
-    } else {
-        sdata[tid] = 0;
-    }
-  
+    
+    __syncthreads();
     // In-place reduction within shared memory
-    for (int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
+    for (unsigned int stride = blockDim.x / 2; stride > 0; stride >>= 1) {
         if (tid < stride) {
             sdata[tid] += sdata[tid + stride];
         }
@@ -192,29 +264,31 @@ __global__ void sumFrommAllBlocks(double * g_odata, size_t blocksToSum)
     {
         g_odata[0] += g_odata[i];
     }
-}
+}*/
 
 __device__ void pi(Population *population, double* sum)
 {
+    double suma=*sum;
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    population->pi[idx]= population->quality[idx]/sum[0];
+    if (idx >= popsize) return; // Ensure we don't go out of bounds
+    population->pi[idx]= population->quality[idx]/suma;
 }
 
-__global__ void selectionRWS(Population* population,double sum, Population* mating_pool,  unsigned long long seed)
+__global__ void selectionRWS(Population* population,double* sum, Population* mating_pool,  unsigned long long seed)
 {
-    pi(population, &sum);
+    pi(population, sum);
 
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= popsize) return; 
 
-    double sum;
-
+    double suma;
     curandState state;
     curand_init(seed, idx, 0, &state);
-    double rand=static_cast<double>((curand_uniform(&state))%2*M_PI);
+    double rand=curand_uniform(&state)*(2*M_PI);
     for(int i=0; i<popsize; i++)
     {
-        sum+=2*M_PI*population->pi[i];
-        if(rand<sum)
+        suma+=2*M_PI*population->pi[i];
+        if(rand<suma)
         {
             mating_pool->location[idx]=population->location[i];
             mating_pool->phenotype[idx]=population->phenotype[i];
@@ -231,6 +305,7 @@ __global__ void selectionRWS(Population* population,double sum, Population* mati
 __global__ void cross_over(Population* mating_pool, unsigned long long seed)
 {
     unsigned int idx=blockDim.x*blockIdx.x+threadIdx.x;
+    if (idx >= popsize) return; // Ensure we don't go out of bounds
     unsigned int i=idx++;
 
     curandState state;
@@ -251,6 +326,7 @@ __global__ void cross_over(Population* mating_pool, unsigned long long seed)
 __global__ void mutattion(Population* mating_pool, unsigned long long seed)
 {
     unsigned int idx=blockDim.x*blockIdx.x+threadIdx.x;
+    if (idx >= popsize) return; // Ensure we don't go out of bounds
 
     curandState state;
     curand_init(seed, idx, 0, &state);
