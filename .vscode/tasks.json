@@ -1,15 +1,33 @@
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run bin/main",
+            "label": "Kompiluj projekt CUDA",
             "type": "shell",
-            "command": "${workspaceFolder}/bin/main",
+            "command": "/usr/bin/nvcc",
+            "args": [
+                "-g",
+                "-G",
+                "${workspaceFolder}/src/GPU/SGA.cu",
+                "${workspaceFolder}/test/mainGPU.cu",
+                "-o",
+                "${workspaceFolder}/bin/main",
+                "-I",
+                "${workspaceFolder}/include/GPU",
+                "-I",
+                "${workspaceFolder}/src/GPU"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$nvcc"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": []
+            "detail": "Kompiluje projekt CUDA za pomocą nvcc."
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

@@ -1,5 +1,7 @@
 {
     "files.associations": {
+        "*.cu": "cuda-cpp",
+        "*.cuh": "cuda-cpp",
         "array": "cpp",
         "atomic": "cpp",
         "bit": "cpp",
@@ -65,6 +67,7 @@
         "__hash_table": "cpp",
         "__split_buffer": "cpp",
         "queue": "cpp",
-        "locale": "cpp"
+        "locale": "cpp",
+        "__config": "cpp"
     }
 }
