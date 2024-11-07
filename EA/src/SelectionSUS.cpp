@@ -1,9 +1,9 @@
-#include "Sus.h"
+#include "SelectionSUS.h"
 #include<omp.h>
-
-std::vector<size_t> Sus::selection(const std::vector<double> &fitnessvalue)
+//zwraca
+std::vector<size_t> SelectionSUS::selection(const std::vector<double> &fitnessvalue)
 {
-    std::vector<size_t> matingPool(fitnessvalue.size(),0);
+    std::vector<size_t> matingPool(fitnessvalue.size());
     double sumFitnessValue=sum(fitnessvalue);
     double angle=sumFitnessValue/static_cast<double>(fitnessvalue.size());
     std::uniform_real_distribution<double> m_distribution(0.0, angle);
@@ -23,7 +23,7 @@ std::vector<size_t> Sus::selection(const std::vector<double> &fitnessvalue)
     return matingPool;
 }
 
-double Sus::sum(const std::vector<double> &fitnessvalue)
+double SelectionSUS::sum(const std::vector<double> &fitnessvalue)
 {
     double sum=0;
     #pragma omp parallel for reduction(+ : sum)

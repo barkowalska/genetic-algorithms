@@ -1,6 +1,8 @@
 #include<vector>
 #include<memory>
+#include<random>
 #include<array>
+#include <stdexcept>
 // template<typename T, size_t N>
 // class Crossover
 // {
