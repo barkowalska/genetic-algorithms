@@ -6,10 +6,9 @@
 
 std::vector<std::vector<double>> SimulatedBinaryCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents)
 {
-    std::vector<std::vector<double>> offspring;
 
     if(parents.size() != m_required_parents) 
-        throw std::invalid_argument("too small parents vector");
+        throw std::invalid_argument("invalid number of parents; expected 2");
 
     if (parents[0].get().size() != parents[1].get().size()) 
         throw std::invalid_argument("parents must be the same size");

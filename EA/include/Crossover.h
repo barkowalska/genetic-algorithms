@@ -10,19 +10,18 @@
 //     virtual std::array<T,N> cross(std::vector<std::array<T,N>>&) = 0; // Funkcja czysto wirtualna
 // };
 
-
 template<typename T>
 class Crossover
 {
-    protected:
-    
+protected: 
     const size_t m_required_parents;//number of chromosomes required for crossover
     std::mt19937 m_generator;
 
-    public:
+public:
     Crossover(size_t requiredParents ):
         m_required_parents(requiredParents), m_generator(std::random_device{}()){}
 
-    //the main function of the crossover
+    //the main function of the crossover, argument to wszyscy rodzice ktorzy sa potrzebni do jednego crossa!!! najczesciej 2
+    //zwraca offspringi najczesciej 2()
     virtual std::vector<std::vector<T>> cross(std::vector<std::reference_wrapper<std::vector<T>>>& parents) = 0; // Funkcja czysto wirtualna
 };
