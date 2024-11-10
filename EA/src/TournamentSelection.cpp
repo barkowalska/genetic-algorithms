@@ -20,6 +20,7 @@ std::vector<size_t> TournamentSelection::selection(const std::vector<double> &fi
             if(fitnessValue[k]<fitnessValue[best]) best=k;
         }
         mating_pool[j]=best;
+        
     }
     return mating_pool;
 }

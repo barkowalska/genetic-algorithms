@@ -3,15 +3,13 @@
 
 std::vector<std::vector<double>> UniformCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents)
 {
-    if(parents.size() != m_required_parents) 
+    if(parents.size() != m_requiredParents) 
         throw std::invalid_argument("invalid number of parents; expected 2");
 
     if (parents[0].get().size() != parents[1].get().size()) 
         throw std::invalid_argument("parents must be the same size");
         
     size_t size = parents[0].get().size();
-    const std::vector<double>& parent1 = parents[0].get();
-    const std::vector<double>& parent2 = parents[1].get();
 
     std::vector<double> child1(size);
     std::vector<double> child2(size);
@@ -22,11 +20,11 @@ std::vector<std::vector<double>> UniformCrossover::cross(std::vector<std::refere
         double randomValue = distribution(m_generator);
             
         if (randomValue < 0.5) {
-            child1[i] = parent1[i];
-            child2[i] = parent2[i];
+            child1[i] = parents[0].get()[i];
+            child2[i] = parents[1].get()[i];
         } else {
-            child1[i] = parent2[i];
-            child2[i] = parent1[i];
+            child1[i] = parents[1].get()[i];
+            child2[i] = parents[0].get()[i];
         }
     }
         return {child1, child2};

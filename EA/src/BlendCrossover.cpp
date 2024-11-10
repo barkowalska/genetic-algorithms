@@ -3,7 +3,7 @@
 
 std::vector<std::vector<double>> BlendCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents)
 {
-    if(parents.size() != m_required_parents) 
+    if(parents.size() != m_requiredParents) 
         throw std::invalid_argument("invalid number of parents; expected 2");
 
     if (parents[0].get().size() != parents[1].get().size()) 

@@ -12,5 +12,5 @@ class SimplexCrossover : public Crossover<double>
         std::vector<std::vector<double>>  offsprings(const std::vector<std::vector<double>>&);
 
         SimplexCrossover(double e, int dimenionsNumber, int numOffsprings) :
-            Crossover(dimenionsNumber), m_e(e), m_numOffspring(numOffsprings), m_distribution(0.0, 1.0){};
+            Crossover(dimenionsNumber+1), m_e(e), m_numOffspring(numOffsprings), m_distribution(0.0, 1.0){};
 };

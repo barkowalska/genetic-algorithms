@@ -1,12 +1,12 @@
 #include "Mutation.h"
 
+// double Pm, std::vector<double>  min, std::vector<double> max
 class UniformMutation: public Mutation<double>
 {
-    private:
-        std::uniform_real_distribution<double> m_distribution;
+
 
     public:
-        std::vector<double> mutation(std::vector<double> &);
+        void mutation(std::vector<double> &) override;
         UniformMutation(double Pm, std::vector<double>  min, std::vector<double> max):
-            Mutation(max, min,Pm), m_distribution(0.0, 1.0){}
+            Mutation(max, min,Pm){}
 };

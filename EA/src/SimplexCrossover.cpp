@@ -7,7 +7,7 @@ std::vector<std::vector<double>>  SimplexCrossover::cross(std::vector<std::refer
     size_t n = parent.size() - 1; 
     size_t dim = parent[0].get().size(); 
 
-    if(parent.size() != m_required_parents) 
+    if(parent.size() != m_requiredParents) 
         throw std::invalid_argument("too small parents vector");
 
     for (size_t i = 1; i < n; ++i)

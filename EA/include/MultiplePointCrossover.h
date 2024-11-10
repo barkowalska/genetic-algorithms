@@ -1,7 +1,7 @@
 #include "Crossover.h"
 #include <algorithm>
 
-
+// size_t points -liczba punktow w ktorych nastapi zamiana w crossie
 class MultiplePointCrossover: public Crossover<double>
 {
 private:
