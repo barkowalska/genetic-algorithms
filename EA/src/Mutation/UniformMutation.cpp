@@ -1,4 +1,4 @@
-#include "UniformMutation.h"
+#include "../../include/Mutation/UniformMutation.h"
 #include <random>
 
 void UniformMutation::mutation(std::vector<double>& individual)

@@ -1,4 +1,4 @@
-#include "ArithmeticCrossover.h"
+#include "../../include/Crossover/ArithmeticCrossover.h"
 
 
 std::vector<std::vector<double>> ArithmeticCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents) 

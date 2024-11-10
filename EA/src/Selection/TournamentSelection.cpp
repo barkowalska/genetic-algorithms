@@ -1,4 +1,4 @@
-#include "TournamentSelection.h"
+#include "../../include/Selection/TournamentSelection.h"
 
 
 std::vector<size_t> TournamentSelection::selection(const std::vector<double> &fitnessValue)

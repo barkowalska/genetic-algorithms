@@ -1,4 +1,4 @@
- #include "CauchyMutation.h"
+ #include "../../include/Mutation/CauchyMutation.h"
 
 void CauchyMutation::mutation(std::vector<double> &individual)
  {

@@ -1,7 +1,4 @@
-#include "SimulatedBinaryCrossover.h"
-
-
-
+#include "../../include/Crossover/SimulatedBinaryCrossover.h"
 
 
 std::vector<std::vector<double>> SimulatedBinaryCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents)

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Crossover.h"
-#include "Mutation.h"
-#include "Selection.h"
+#include "./Crossover/Crossover.h"
+#include "./Mutation/Mutation.h"
+#include "./Selection/Selection.h"
 
 #include <memory>
 #include <vector>
@@ -17,8 +17,7 @@ template<typename ChromosomeType>
 class GA
 {
 private:
-    std::random_device m_rd;
-    std::mt19937 generator(m_rd());
+    std::mt19937 m_generator;
 
     std::shared_ptr<Crossover<ChromosomeType>> m_crossover;
     std::shared_ptr<Mutation<ChromosomeType>> m_mutation;
@@ -40,6 +39,10 @@ private:
     //n elemntow dla ktporych max moze byc zbyt mala roznica
     size_t m_numMaxElements;
 public:
+    GA():m_generator(std::random_device{}())
+    {
+
+    }
     struct Population
     {
         std::vector<std::vector<ChromosomeType>> chromosomes;
@@ -82,7 +85,7 @@ void GA<ChromosomeType>::initialize()
         m_population.chromosomes[i].resize(m_lengthOfChromosome);
         for (size_t j = 0; j < m_lengthOfChromosome; j++) 
         {
-            m_population.chromosomes[i][j]=dist[j](generator);
+            m_population.chromosomes[i][j]=dist[j](m_generator);
         }
         m_population.fitnessValues[i] = m_fitness_function(m_population.chromosomes[i]);
     }
@@ -110,7 +113,7 @@ std::pair<double,std::vector<ChromosomeType>> GA<ChromosomeType>::run()
     std::optional<std::uniform_int_distribution<size_t>> fillCross;
 
     if(actualPopulation.get().fitnessValues.empty()) throw std::runtime_error("Błąd: Wektor fitnessValues jest pusty!");
-    double maxPreviouse = *std::max_element(actualPopulation.get().fitnessValues.begin(), actualPopulation.get().fitnessValue.end());
+    double maxPreviouse = *std::max_element(actualPopulation.get().fitnessValues.begin(), actualPopulation.get().fitnessValues.end());
     double maxCurrent = maxPreviouse;
 
     if(rest!=0)
@@ -125,7 +128,7 @@ std::pair<double,std::vector<ChromosomeType>> GA<ChromosomeType>::run()
     };
     
     //oblicza fitnessValue dla podanego chromosomu, finalnie zwroci najwieksza wartosc fitnessValue z populacji
-    auto evaluateFitnessValue = [&maxCurrent,this](const std::vector<ChromosomeType>& chromosome)
+    auto evaluateFitnessValues = [&maxCurrent,this](const std::vector<ChromosomeType>& chromosome)
     {
         double value = m_fitness_function(chromosome);
         if(value > maxCurrent){
@@ -146,7 +149,7 @@ std::pair<double,std::vector<ChromosomeType>> GA<ChromosomeType>::run()
         size_t numOfCross=m_popSize/toCross.size();
         for(size_t i=0; i<numOfCross; i++)
         {
-            if(randomPc(generator) >m_Pc)continue;
+            if(randomPc(m_generator) >m_Pc)continue;
             std::transform(
                 selected.begin() + i*numParents,
                 selected.begin() + (i+1)*numParents, 
@@ -172,7 +175,7 @@ std::pair<double,std::vector<ChromosomeType>> GA<ChromosomeType>::run()
 
             for(size_t k=m_popSize%toCross.size(); k<rest; k++)
             {
-                toCross[k]=selectedToReference((*fillCross)(generator));
+                toCross[k]=selectedToReference((*fillCross)(m_generator));
             } 
                 auto offsprings = m_crossover->cross(toCross);
                 std::copy(
@@ -195,8 +198,8 @@ std::pair<double,std::vector<ChromosomeType>> GA<ChromosomeType>::run()
             std::transform(
                 actualMatingPool.get().chromosomes.begin(), 
                 actualMatingPool.get().chromosomes.end(), 
-                actualMatingPool.get().fitnessValue.begin(),
-                evaluateFitnessValue
+                actualMatingPool.get().fitnessValues.begin(),
+                evaluateFitnessValues
             );
 
             //nowa populacja

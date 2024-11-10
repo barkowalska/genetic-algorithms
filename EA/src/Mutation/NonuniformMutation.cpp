@@ -1,4 +1,4 @@
-#include "NonuniformMutation.h"
+#include "../../include/Mutation/NonuniformMutation.h"
 
 
 void NonuniformMutation::mutation(std::vector<double> &individual)

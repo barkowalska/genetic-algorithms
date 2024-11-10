@@ -1,4 +1,4 @@
-#include "BlendCrossover.h"
+#include "../../include/Crossover/BlendCrossover.h"
 #include <random>
 
 std::vector<std::vector<double>> BlendCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents)

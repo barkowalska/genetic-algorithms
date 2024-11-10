@@ -1,4 +1,4 @@
-#include "UniformCrossover.h"
+#include "../../include/Crossover/UniformCrossover.h"
 
 
 std::vector<std::vector<double>> UniformCrossover::cross(std::vector<std::reference_wrapper<std::vector<double>>>& parents)

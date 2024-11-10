@@ -1,4 +1,4 @@
-#include "BoundryMutation.h"
+#include "../../include/Mutation/BoundryMutation.h"
 #include <random>
 
 void BoundryMutation::mutation(std::vector<double> & individual)

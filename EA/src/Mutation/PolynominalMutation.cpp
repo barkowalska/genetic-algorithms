@@ -1,4 +1,4 @@
-#include "PolynominalMutation.h"
+#include "../../include/Mutation/PolynominalMutation.h"
 
 void PolynominalMutation::mutation(std::vector<double> &individual)
 {

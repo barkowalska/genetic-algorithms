@@ -1,4 +1,4 @@
-#include "SelectionSUS.h"
+#include "../../include/Selection/SelectionSUS.h"
 #include<omp.h>
 //zwraca
 std::vector<size_t> SelectionSUS::selection(const std::vector<double> &fitnessvalue)
