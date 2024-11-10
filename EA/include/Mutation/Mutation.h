@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <random>
 #include <stdexcept>
@@ -28,3 +30,4 @@ class Mutation
             }
         }
 };
+

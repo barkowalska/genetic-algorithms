@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <random>
 
@@ -15,3 +17,4 @@ public:
     Selection(): 
         m_generator(std::random_device{}()){}
 };
+

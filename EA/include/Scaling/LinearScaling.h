@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdexcept>
 
+
 class LinearScaling: public Scalling<double>
 {
 public:

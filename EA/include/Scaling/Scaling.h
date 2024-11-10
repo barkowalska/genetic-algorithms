@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 
 
@@ -12,3 +14,4 @@ public:
     */
     virtual void scaling( std::vector<T> &fitnessValue)=0;
 };
+

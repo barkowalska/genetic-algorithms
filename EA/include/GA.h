@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Crossover.h"
 #include "Mutation.h"
 #include "Selection.h"
@@ -15,8 +17,8 @@ template<typename ChromosomeType>
 class GA
 {
 private:
-    std::random_device rd;
-    std::mt19937 generator(rd());
+    std::random_device m_rd;
+    std::mt19937 generator(m_rd());
 
     std::shared_ptr<Crossover<ChromosomeType>> m_crossover;
     std::shared_ptr<Mutation<ChromosomeType>> m_mutation;
@@ -57,7 +59,6 @@ public:
     inline void set_m_min(std::vector<double> min) {m_min=min;}
     inline void set_m_max(std::vector<double> max) {m_max=max;}
 
-    GA() : generator(rd()) {}
     
     std::pair<double,std::vector<ChromosomeType>> run();
     void initialize();
@@ -164,7 +165,7 @@ std::pair<double,std::vector<ChromosomeType>> GA<ChromosomeType>::run()
         {
             std::transform(
                 selected.begin() + numOfCross*numParents,
-                elected.begin() + (numOfCross+1)*numParents, 
+                selected.begin() + (numOfCross+1)*numParents, 
                 toCross.begin(), 
                 selectedToReference
             );
