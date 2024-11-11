@@ -5,6 +5,7 @@
 
 /*
 Performs crossover at multiple points along the chromosomes.
+ Default constructor is deleted.
 */
 class MultiplePointCrossover : public Crossover<double> {
 private:

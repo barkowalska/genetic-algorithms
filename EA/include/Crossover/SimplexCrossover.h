@@ -3,7 +3,8 @@
 
 /*
 Creates offspring based on the centroid of parent vectors expanded by a
-user-defined factor.
+user-defined factor.  
+Default constructor is deleted.
 */
 class SimplexCrossover : public Crossover<double> {
 private:

@@ -7,7 +7,8 @@
 
 /*
 SBX, uses a calculated β coefficient to adaptively generate offspring with
-controlled similarity to the parents.
+controlled similarity to the parents.  
+Default constructor is deleted.
 */
 class SimulatedBinaryCrossover : public Crossover<double> {
 private:

@@ -13,7 +13,7 @@
 #include <random>
 #include <stdexcept>
 #include <vector>
-#include<omp.h>
+#include <omp.h>
 
 template <typename ChromosomeType> class GA {
 private:

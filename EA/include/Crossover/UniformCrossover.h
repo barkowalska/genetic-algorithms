@@ -4,7 +4,8 @@
 
 /*
 Creates offsprings by randomly swapping genes between parent chromosomes based
-on a uniform distribution.
+on a uniform distribution. 
+Default constructor is deleted.
 */
 class UniformCrossover : public Crossover<double> {
 

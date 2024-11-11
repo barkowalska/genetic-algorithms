@@ -5,6 +5,7 @@
 Creates offspring by generating new genes within an expanded range controlled by
 the user-defined alpha parameter. The alpha parameter determines how far beyond
 the parent gene range the new genes can be.
+ Default constructor is deleted.
 */
 class BlendCrossover : public Crossover<double> {
 private:
