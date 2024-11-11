@@ -1,0 +1,1 @@
+/usr/bin/c++ -O3 -DNDEBUG CMakeFiles/test.dir/test/main.cpp.o -o /home/basia/Desktop/genetic-algorithms/EA/bin/Release/test  /home/basia/Desktop/genetic-algorithms/EA/lib/Release/libMyStaticLibrary.a /home/basia/Desktop/genetic-algorithms/EA/lib/Release/libMyStaticLibrary.a /usr/lib/gcc/x86_64-linux-gnu/13/libgomp.so /usr/lib/x86_64-linux-gnu/libpthread.a 
