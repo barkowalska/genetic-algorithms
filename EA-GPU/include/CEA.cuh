@@ -1,5 +1,8 @@
+#pragma once
 #include<cstdint>
 #include<cuda_runtime.h>
+#include <curand_kernel.h>
+
 
 #define CHECK(call)\
 {\
@@ -18,27 +21,36 @@ namespace cea
 typedef double(*fitnessFunction_ptr)(double*);
 __device__ fitnessFunction_ptr FitnessFunction;
 
-template<uint64_t IslandNum, uint64_t PopSize, uint64_t ChromosomeSize>
-class CEA
-{
-    public:
-    struct PopulationType{
+template<uint64_t PopSize, uint64_t ChromosomeSize>
+struct PopulationType{
         double chromosomes[PopSize*ChromosomeSize];
         double fitnessValue[PopSize];
         const uint64_t chromosomeSize = ChromosomeSize;
         const uint64_t popSize = PopSize;
-    };
+};
 
-    PopulationType* Population[IslandNum];
-    PopulationType* MatingPool[IslandNum];
+__device__ unsigned long long seed;
+void setGlobalSeed()
+{
+    unsigned long long h_seed=static_cast<unsigned long long>(time(NULL)); 
+    cudaMemcpyToSymbol(seed, &h_seed, sizeof(unsigned long long));
+}
+
+template<uint64_t IslandNum, uint64_t PopSize, uint64_t ChromosomeSize>
+class CEA
+{
+    public:
+
+    PopulationType<PopSize,ChromosomeSize>* Population[IslandNum];
+    PopulationType<PopSize,ChromosomeSize>* MatingPool[IslandNum];
     uint64_t* Selected[IslandNum];
 
     CEA(fitnessFunction_ptr fitnessFunction){
        // Allocate device memory for each island
         for (uint64_t i = 0; i < IslandNum; ++i)
         {
-            cudaMalloc(&Population[i],sizeof(PopulationType));
-            cudaMalloc(&MatingPool[i],sizeof(PopulationType));
+            cudaMalloc(&Population[i],sizeof(PopulationType<PopSize,ChromosomeSize>));
+            cudaMalloc(&MatingPool[i],sizeof(PopulationType<PopSize,ChromosomeSize>));
 
             cudaMalloc(&Selected[i], PopSize * sizeof(uint64_t));
         } 
@@ -58,5 +70,21 @@ class CEA
     }
 };
 
+template<uint64_t PopSize, uint64_t ChromosomeSize>
+class EAOperator {
+    public:
+    EAOperator(dim3 blockSize):m_blockSize(blockSize){}
+    protected:
+    dim3 m_blockSize;
+};
+
+template<uint64_t PopSize, uint64_t ChromosomeSize>
+class Selection: public EAOperator<PopSize,ChromosomeSize> {
+    public:
+    Selection(dim3 blockSize) : EAOperator<PopSize,ChromosomeSize>(blockSize){ }
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) = 0;
+};
 
 }
+
+
