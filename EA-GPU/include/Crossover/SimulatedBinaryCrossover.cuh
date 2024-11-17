@@ -6,7 +6,7 @@ namespace cea
 {
 
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    __global__ void ArithmeticCrossover_(PopulationType<PopSize,ChromosomeSize>* Population, PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected)
+    __global__ void SimulatedBinaryCrossover_(PopulationType<PopSize,ChromosomeSize>* Population, PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected, double m_Pc, double m_n)
     {
         unsigned int idx=2*(blockDim.x*blockIdx.x+threadIdx.x);
         if (idx >= PopSize || idx+1>=PopSize) return; 
@@ -21,24 +21,32 @@ namespace cea
 
         for(uint64_t i=0; i<ChromosomeSize; i++)
         {
-            double alpha=curand_uniform_double(&state);
-            child_A[i] = alpha*parent_A[i] + (1.0-alpha)*parent_B[i];
-            child_B[i] = (1.0-alpha)*parent_A[i] +alpha*parent_B[i] 
+            double u=curand_uniform_double(&state);
+
+            double beta=(u<=0.5)*pow(2.0 * u, 1.0 / (m_n + 1.0))+(u<0.5)*pow(1.0 / (2.0 * (1.0 - u)), 1.0 / (m_n + 1.0));
+            bool crossover=(curand_uniform_double(&state) <= m_Pc);
+            child_A[i] =crossover*(0.5* (parent_A[i] + parent_B[i] )+ 0.5*beta* (parent_A[i]-parent_B[i]))+(!crossover)*parent_A[i];
+            child_B[i] =crossover*(0.5* (parent_A[i] + parent_B[i] )+ 0.5*beta* (parent_B[i]-parent_A[i]))+(!crossover)*parent_B[i];
+
+        
         }
     }
 
 
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    class ArithmeticCrossover : public Crossover<Popsize, ChromosomeSize>
+    class SimulatedBinaryCrossover : public Crossover<Popsize, ChromosomeSize>
     {
         private:
         dim3 m_blockSize;
+        double m_n;// Distribution index that defines the spread of the offspring
+        double m_Pc;  // Crossover probability
+
         public:
-        ArithmeticCrossover() : m_blockSize(PopSize/2){}
+        SimulatedBinaryCrossover(double n = 2.0, double crossover_prob = 0.9) : m_blockSize(PopSize/2),  m_n(n), m_Pc(crossover_prob){}
         void operator()(PopulationType<PopSize,ChromosomeSize>* Population, PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected) override
         {
             setGlobalSeed();
-            ArithmeticCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected);
+            SimulatedBinaryCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected, m_Pc, m_n);
         }
         // Check for kernel launch errors
             cudaError_t err = cudaGetLastError();

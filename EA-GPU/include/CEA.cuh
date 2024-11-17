@@ -39,6 +39,7 @@ void setGlobalSeed()
 template<uint64_t IslandNum, uint64_t PopSize, uint64_t ChromosomeSize>
 class CEA
 {
+    static_assert((PopSize % 2) == 0);
     public:
 
     PopulationType<PopSize,ChromosomeSize>* Population[IslandNum];
@@ -76,7 +77,7 @@ template<uint64_t PopSize, uint64_t ChromosomeSize>
 class Selection{
     public:
     Selection(){ }
-    virtual void operator()(PopultionType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) = 0;
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) = 0;
 };
 
 template<uint64_t PopSize, uint64_t ChromosomeSize>
