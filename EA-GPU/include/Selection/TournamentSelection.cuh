@@ -1,6 +1,6 @@
 #pragma once
 
-#include"CEA.cuh"
+#include"../CEA.cuh"
 #include<iostream>
 namespace cea
 {

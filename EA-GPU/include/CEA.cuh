@@ -70,19 +70,20 @@ class CEA
     }
 };
 
+
+
 template<uint64_t PopSize, uint64_t ChromosomeSize>
-class EAOperator {
+class Selection{
     public:
-    EAOperator(dim3 blockSize):m_blockSize(blockSize){}
-    protected:
-    dim3 m_blockSize;
+    Selection(){ }
+    virtual void operator()(PopultionType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) = 0;
 };
 
 template<uint64_t PopSize, uint64_t ChromosomeSize>
-class Selection: public EAOperator<PopSize,ChromosomeSize> {
+class Crossover{
     public:
-    Selection(dim3 blockSize) : EAOperator<PopSize,ChromosomeSize>(blockSize){ }
-    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) = 0;
+    Crossover() { }
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* Population,PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected) = 0;
 };
 
 }

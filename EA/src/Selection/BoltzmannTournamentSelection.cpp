@@ -11,7 +11,7 @@ std::vector<size_t> BoltzmannTournamentSelection::selection(
       chosen[i] = m_distribution(m_generator);
     }
     size_t best = chosen[0];
-    for (size_t k = 0; k < m_tournamentSize; k++) {
+    for (size_t k: chosen) {
       std::uniform_real_distribution<double> m_distribution(0.0, 1.0);
       double rand = m_distribution(m_generator);
       double pi = 1 / (1 + exp(fitnessValue[k] - fitnessValue[best]) / m_t);
