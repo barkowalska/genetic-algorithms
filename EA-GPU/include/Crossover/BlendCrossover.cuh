@@ -34,7 +34,7 @@ namespace cea
 
 
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    class BlendCrossover : public Crossover<Popsize, ChromosomeSize>
+    class BlendCrossover : public Crossover<PopSize, ChromosomeSize>
     {
         private:
         dim3 m_blockSize;
@@ -46,16 +46,19 @@ namespace cea
         {
             setGlobalSeed();
             BlendCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected, m_alpha);
-        }
-    
-        // Check for kernel launch errors
+        
+                // Check for kernel launch errors
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
-                printf("CUDA Error: %s\n", cudaGetErrorString(err));
+                std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
             }
 
             // Synchronize the device
             cudaDeviceSynchronize();
+        
+        }
+    
+
         
     };
 }

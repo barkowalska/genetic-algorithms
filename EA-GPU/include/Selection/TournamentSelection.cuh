@@ -28,7 +28,9 @@ class TournamentSelection: public Selection<PopSize,ChromosomeSize>
 {
   public:
   uint64_t m_tournamentSize;
-  TournamentSelection(dim3 blockSize, uint64_t tournamentSize): Selection<PopSize,ChromosomeSize>(blockSize), m_tournamentSize(tournamentSize){}
+  dim3 m_blockSize; // CUDA block size
+
+  TournamentSelection(dim3 blockSize, uint64_t tournamentSize): m_tournamentSize(tournamentSize), m_blockSize(blockSize){}
   void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) override
   {
     setGlobalSeed();

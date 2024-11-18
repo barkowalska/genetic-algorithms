@@ -2,6 +2,8 @@
 #include<cstdint>
 #include<cuda_runtime.h>
 #include <curand_kernel.h>
+#include <iostream>
+
 
 
 #define CHECK(call)\
@@ -17,6 +19,14 @@
 
 namespace cea
 {
+
+__constant__ double ProbabilityMutation;
+
+template<uint64_t ChromosomeSize>
+__constant__ double MIN[ChromosomeSize]; 
+
+template<uint64_t ChromosomeSize>
+__constant__ double MAX[ChromosomeSize]; 
 
 typedef double(*fitnessFunction_ptr)(double*);
 __device__ fitnessFunction_ptr FitnessFunction;
@@ -39,6 +49,7 @@ void setGlobalSeed()
 template<uint64_t IslandNum, uint64_t PopSize, uint64_t ChromosomeSize>
 class CEA
 {
+
     static_assert((PopSize % 2) == 0);
     public:
 
@@ -56,6 +67,12 @@ class CEA
             cudaMalloc(&Selected[i], PopSize * sizeof(uint64_t));
         } 
         cudaMemcpyToSymbol(FitnessFunction, &fitnessFunction, sizeof(fitnessFunction_ptr));
+    }
+
+    void setContraints(double* min, double* max)
+    {
+        cudaMemcpyToSymbol(MIN<ChromosomeSize>, min, ChromosomeSize*sizeof(double));
+        cudaMemcpyToSymbol(MAX<ChromosomeSize>, max, ChromosomeSize*sizeof(double));
     }
 
     // Destructor
@@ -85,6 +102,13 @@ class Crossover{
     public:
     Crossover() { }
     virtual void operator()(PopulationType<PopSize,ChromosomeSize>* Population,PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected) = 0;
+};
+
+template<uint64_t PopSize, uint64_t ChromosomeSize>
+class Mutation{
+    public:
+    Mutation() { }
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) = 0;
 };
 
 }
