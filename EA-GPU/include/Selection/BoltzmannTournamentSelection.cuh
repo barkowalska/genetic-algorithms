@@ -60,7 +60,7 @@ class BoltzmannTournamentSelection : public Selection<PopSize, ChromosomeSize>
         {
             setGlobalSeed();
             // Launch CUDA kernel for selection
-            BoltzmannTournamentSelection_<<<1, this->m_blockSize>>>(Population, Selected, m_tournamentSize, m_t);
+            BoltzmannTournamentSelection_<<<1, m_blockSize>>>(Population, Selected, m_tournamentSize, m_t);
 
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {

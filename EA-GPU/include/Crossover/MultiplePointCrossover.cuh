@@ -77,7 +77,7 @@ namespace cea
             {
                 setGlobalSeed();
                 // Launch CUDA kernel for crossover
-                MultiplePointCrossover_<<<1, this->m_blockSize, (m_numOfPoints+1) * sizeof(uint64_t)>>>(Population, MatingPool, Selected, m_numOfPoints);
+                MultiplePointCrossover_<<<1, m_blockSize, (m_numOfPoints+1) * sizeof(uint64_t)>>>(Population, MatingPool, Selected, m_numOfPoints);
             
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();

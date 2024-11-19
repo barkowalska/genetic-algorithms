@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CEA.cuh"
+
+
 namespace cea
 {
     template<uint64_t PopSize, uint64_t ChromosomeSize>
@@ -20,7 +22,10 @@ namespace cea
             double rand=curand_uniform_double(&state);
             double change=((rand<=0.5)*MIN[i]+(rand>0.5)*MAX[i]);
 
-            chromosome[i]=(randPm>=ProbabilityMutation)*chromosome[i]+(randPm< ProbabilityMutation)*change;
+            //chromosome[i] = changeIf(chromosome[i], change, randPm, ProbabilityMutation);
+            chromosome[i] = tenary(change, chromosome[i], randPm < ProbabilityMutation);
+            //chromosome[i]=(randPm>=ProbabilityMutation)*chromosome[i]+
+            //(randPm< ProbabilityMutation)*change;
         }
 
     }
@@ -29,19 +34,20 @@ namespace cea
     template<uint64_t PopSize, uint64_t ChromosomeSize>
     class BoundryMutation : public Mutation<PopSize, ChromosomeSize>
     {
-        dim3 m_blockSize; // CUDA block size
-
     public:
-        BoundryMutation() :m_blockSize(PopSize){}
+        BoundryMutation() {}
         void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
         {
-            BoundryMutation_<<<1, m_blockSize>>>(MatingPool);
+            setGlobalSeed();
 
-             cudaError_t err = cudaGetLastError();
+            uint64_t gridSize = Execution::CalculateGridSize(PopSize);
+            uint64_t blockSize = Execution::GetBlockSize();
+            BoundryMutation_<<<gridSize, blockSize>>>(MatingPool);
+
+            cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                     std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
             }
-            cudaDeviceSynchronize();
 
         }
 
