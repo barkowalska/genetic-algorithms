@@ -28,17 +28,15 @@ class TournamentSelection: public Selection<PopSize,ChromosomeSize>
 {
   public:
   uint64_t m_tournamentSize;
-  dim3 m_blockSize; // CUDA block size
 
-  TournamentSelection(dim3 blockSize, uint64_t tournamentSize): m_tournamentSize(tournamentSize), m_blockSize(blockSize){}
+  TournamentSelection( uint64_t tournamentSize=2): m_tournamentSize(tournamentSize){}
   void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) override
   {
     setGlobalSeed();
-    TournamentSelection_<<<1,this->m_blockSize>>>(Population, Selected, m_tournamentSize);
+      uint64_t gridSize = Execution::CalculateGridSize(PopSize);
+      uint64_t blockSize = Execution::GetBlockSize();
+      TournamentSelection_<<<gridSize,blockSize>>>(Population, Selected, m_tournamentSize);
   }
-  void printData()
-  {
-    std::cout << "BLOCK SIZE: " << this->m_blockSize.x << std::endl;
-  }
+
 };
 }

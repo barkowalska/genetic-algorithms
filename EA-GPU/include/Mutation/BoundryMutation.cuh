@@ -20,12 +20,10 @@ namespace cea
         {
             double randPm=curand_uniform_double(&state);
             double rand=curand_uniform_double(&state);
-            double change=((rand<=0.5)*MIN[i]+(rand>0.5)*MAX[i]);
+            double change=((rand<=0.5)*MIN<ChromosomeSize>[i]+(rand>0.5)*MAX<ChromosomeSize>[i]);
 
-            //chromosome[i] = changeIf(chromosome[i], change, randPm, ProbabilityMutation);
             chromosome[i] = tenary(change, chromosome[i], randPm < ProbabilityMutation);
-            //chromosome[i]=(randPm>=ProbabilityMutation)*chromosome[i]+
-            //(randPm< ProbabilityMutation)*change;
+
         }
 
     }
@@ -35,7 +33,6 @@ namespace cea
     class BoundryMutation : public Mutation<PopSize, ChromosomeSize>
     {
     public:
-        BoundryMutation() {}
         void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
         {
             setGlobalSeed();

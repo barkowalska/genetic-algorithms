@@ -52,8 +52,7 @@ namespace cea
     class MultiplePointCrossover : public Crossover<PopSize, ChromosomeSize>
     {
         private:
-            dim3 m_blockSize;    // CUDA block size
-            uint64_t m_numOfPoints; // Number of crossover points
+            uint64_t m_numOfPoints;
 
         public:
             /*
@@ -61,7 +60,7 @@ namespace cea
               Arguments:
               - numOfPoints (uint64_t): Number of crossover points.
             */
-            MultiplePointCrossover(uint64_t numOfPoints) : m_blockSize(PopSize / 2), m_numOfPoints(numOfPoints){
+            MultiplePointCrossover(uint64_t numOfPoints) :m_numOfPoints(numOfPoints){
                 if (numOfPoints >= ChromosomeSize)
                     throw std::invalid_argument("numOfPoints is greater than ChromosomSize");
             }
@@ -77,7 +76,9 @@ namespace cea
             {
                 setGlobalSeed();
                 // Launch CUDA kernel for crossover
-                MultiplePointCrossover_<<<1, m_blockSize, (m_numOfPoints+1) * sizeof(uint64_t)>>>(Population, MatingPool, Selected, m_numOfPoints);
+                uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
+                uint64_t blockSize = Execution::GetBlockSize();
+                MultiplePointCrossover_<<<gridSize, blockSize, (m_numOfPoints+1) * sizeof(uint64_t)>>>(Population, MatingPool, Selected, m_numOfPoints);
             
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();
@@ -85,8 +86,6 @@ namespace cea
                         std::cout << "CUDA Error: " << cudaGetErrorString(err) << std::endl;
                 }
 
-                // Synchronize the device
-                cudaDeviceSynchronize();
             }
     };
 }

@@ -46,7 +46,7 @@ namespace cea
         std::uniform_int_distribution<uint64_t> m_distribution;
     public:
     RandomMigration() : m_generator(std::random_device{}()), m_distribution(0,PopSize){};
-    void operator()(PopulationType<PopSize,ChromosomeSize>* Population[IslandNum]) override
+    void operator()(PopulationType<PopSize,ChromosomeSize>** Population) override
     {
         setGlobalSeed();
         std::vector<uint64_t> populations(IslandNum);
@@ -57,7 +57,7 @@ namespace cea
         for(uint64_t i =0; i+1<IslandNum; ++i)
         {
             toMigrate=m_distribution(m_generator);
-            RandomMigration_<<<1,toMigrate>>>(populations[i], populations[i++]);
+            RandomMigration_<<<1,toMigrate>>>(Population[populations[i]], Population[populations[i++]]);
         }
     }
 

@@ -35,15 +35,13 @@ namespace cea
     template<uint64_t PopSize, uint64_t ChromosomeSize>
     class ArithmeticCrossover : public Crossover<PopSize, ChromosomeSize>
     {
-        private:
-            dim3 m_blockSize; // CUDA block size
         public:
             /*
               Constructor
               Initializes the block size for the CUDA kernel.
               No arguments needed.
             */
-            ArithmeticCrossover() : m_blockSize(PopSize / 2) {}
+            ArithmeticCrossover(){}
             
             /*
               Overloaded operator() to perform crossover.
@@ -55,17 +53,16 @@ namespace cea
             void operator()(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected) override
             {
                 setGlobalSeed();
-                // Launch CUDA kernel for crossover
-                ArithmeticCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected);
 
-                            // Check for kernel launch errors
-                cudaError_t err = cudaGetLastError();
+                uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
+                uint64_t blockSize = Execution::GetBlockSize();
+                //ArithmeticCrossover_<<<gridSize, blockSize,0,omp_get_thread_num()>>>(Population, MatingPool, Selected);
+                ArithmeticCrossover_<<<gridSize, blockSize>>>(Population, MatingPool, Selected);
+                cudaError_t err = cudaGetLastError(); 
                 if (err != cudaSuccess) {
                     std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
                 }
 
-                // Synchronize the device
-                cudaDeviceSynchronize();
             }
 
     };

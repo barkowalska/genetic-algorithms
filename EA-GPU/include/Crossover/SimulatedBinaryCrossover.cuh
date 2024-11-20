@@ -39,7 +39,6 @@ namespace cea
     class SimulatedBinaryCrossover : public Crossover<PopSize, ChromosomeSize>
     {
         private:
-            dim3 m_blockSize; // CUDA block size
             double m_n;       // Distribution index that defines the spread of the offspring
             double m_Pc;      // Crossover probability
 
@@ -50,7 +49,7 @@ namespace cea
               - n (double): Distribution index (default value is 2.0).
               - crossover_prob (double): Probability of crossover (default value is 0.9).
             */
-            SimulatedBinaryCrossover(double n = 2.0, double crossover_prob = 0.9) : m_blockSize(PopSize / 2), m_n(n), m_Pc(crossover_prob) {}
+            SimulatedBinaryCrossover(double n = 2.0, double crossover_prob = 0.9) : m_n(n), m_Pc(crossover_prob) {}
 
             /*
               Overloaded operator() to perform crossover.
@@ -63,7 +62,9 @@ namespace cea
             {
                 setGlobalSeed();
                 // Launch CUDA kernel for crossover
-                SimulatedBinaryCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected, m_Pc, m_n);
+                uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
+                uint64_t blockSize = Execution::GetBlockSize();
+                SimulatedBinaryCrossover_<<<gridSize,blockSize>>>(Population, MatingPool, Selected, m_Pc, m_n);
 
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();
@@ -71,8 +72,6 @@ namespace cea
                         std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
                 }
 
-                // Synchronize the device
-                cudaDeviceSynchronize();
             }
 
     };

@@ -32,17 +32,19 @@ namespace cea
     class UniformCrossover : public Crossover<PopSize, ChromosomeSize>
     {
         private:
-            dim3 m_blockSize; // CUDA block size
 
         public:
 
-            UniformCrossover() : m_blockSize(PopSize / 2) {}
+            UniformCrossover(){}
 
  
             void operator()(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected) override
             {
                 setGlobalSeed();
-                UniformCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected);
+
+                uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
+                uint64_t blockSize = Execution::GetBlockSize();
+                UniformCrossover_<<<gridSize, blockSize>>>(Population, MatingPool, Selected);
 
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();
@@ -50,8 +52,6 @@ namespace cea
                         std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
                 }
 
-                // Synchronize the device
-                cudaDeviceSynchronize();
             }
 
     };

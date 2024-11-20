@@ -37,28 +37,24 @@ namespace cea
     class BlendCrossover : public Crossover<PopSize, ChromosomeSize>
     {
         private:
-        dim3 m_blockSize;
         double m_alpha; // user-deﬁned parameter that controls the extent of the expansion
 
         public:
-        BlendCrossover(double alpha = 0.5) : m_blockSize(PopSize/2), m_alpha(alpha){}
+        BlendCrossover(double alpha = 0.5) :  m_alpha(alpha){}
         void operator()(PopulationType<PopSize,ChromosomeSize>* Population, PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected) override
         {
             setGlobalSeed();
-            BlendCrossover_<<<1, this->m_blockSize>>>(Population, MatingPool, Selected, m_alpha);
+                uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
+                uint64_t blockSize = Execution::GetBlockSize();
+                BlendCrossover_<<<gridSize, blockSize>>>(Population, MatingPool, Selected, m_alpha);
         
                 // Check for kernel launch errors
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                 std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
             }
-
-            // Synchronize the device
-            cudaDeviceSynchronize();
-        
+       
         }
-    
-
         
     };
 }

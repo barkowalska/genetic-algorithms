@@ -36,7 +36,6 @@ template<uint64_t PopSize, uint64_t ChromosomeSize>
 class BoltzmannTournamentSelection : public Selection<PopSize, ChromosomeSize>
 {
   private:
-    dim3 m_blockSize; // CUDA block size
   public:
     uint64_t m_tournamentSize; // Number of individuals participating in each tournament
         double m_t;                // Temperature parameter for Boltzmann scaling
@@ -48,7 +47,7 @@ class BoltzmannTournamentSelection : public Selection<PopSize, ChromosomeSize>
           - t (double): Temperature parameter for Boltzmann scaling (must be > 0).
         */
         BoltzmannTournamentSelection(uint64_t tournamentSize=2, double t=2.0) :
-            m_tournamentSize(tournamentSize), m_t(t), m_blockSize(PopSize){}
+            m_tournamentSize(tournamentSize), m_t(t){}
 
         /*
           Selection operator - selects individuals based on Boltzmann-scaled tournament selection.
@@ -59,14 +58,16 @@ class BoltzmannTournamentSelection : public Selection<PopSize, ChromosomeSize>
         void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) override
         {
             setGlobalSeed();
+
+            uint64_t gridSize = Execution::CalculateGridSize(PopSize);
+            uint64_t blockSize = Execution::GetBlockSize();
             // Launch CUDA kernel for selection
-            BoltzmannTournamentSelection_<<<1, m_blockSize>>>(Population, Selected, m_tournamentSize, m_t);
+            BoltzmannTournamentSelection_<<<gridSize, blockSize>>>(Population, Selected, m_tournamentSize, m_t);
 
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                     std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
             }
-            cudaDeviceSynchronize();
 
         }
 };

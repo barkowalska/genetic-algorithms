@@ -4,19 +4,22 @@
 namespace cea
 {
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    class Initialization : public Initialization<PopSize, ChromosomeSize> 
+    class UniformInitialization : public Initialization<PopSize, ChromosomeSize> 
     {
         public:
-        void operator()(PopulationType<PopSize, ChromosomeSize> Population) override
+        void operator()(PopulationType<PopSize, ChromosomeSize>* Population) override
         {
+            setGlobalSeed();
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
-            Initialization<<<gridSize, blockSize>>>(Population);
+            Initialization_<<<gridSize, blockSize>>>(Population);
 
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                     std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
             }
+            CHECK(cudaGetLastError());
+
         }
 
     };
@@ -31,11 +34,9 @@ namespace cea
         curand_init(seed, idx, 0, &state);
         for(uint64_t i=0; i<ChromosomeSize; i++)
         {
-            Population->chromosomes[idx*ChromosomeSize+i]=curand_uniform_double(&state)*(MAX[i]-MIN[i])+MIN[i];
-        }
-
-        
-        
+            double rand=curand_uniform_double(&state);
+            Population->chromosomes[idx*ChromosomeSize+i]=rand*(MAX<ChromosomeSize>[i]-MIN<ChromosomeSize>[i])+MIN<ChromosomeSize>[i];
+        }        
         Population->fitnessValue[idx]=FitnessFunction(&Population->chromosomes[idx*ChromosomeSize]);
         
 
