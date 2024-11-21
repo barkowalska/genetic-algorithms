@@ -6,6 +6,10 @@
 Mutation magnitude decreases over generations, allowing for 
 finer tuning as the algorithm progresses.
 Default constructor deleted
+
+!!!!UWAGA!!!!!
+zeby przekazywac tutaj numer generacji zrobic statyczna klase
+ widziana w GA , ktora ma pola statyczne widziane wszedzie np numer generacji
 */
 class NonuniformMutation : public Mutation<double> {
 private:

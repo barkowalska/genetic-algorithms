@@ -1,4 +1,0 @@
-/home/basia/Desktop/genetic-algorithms/EA/build/CMakeFiles/MyStaticLibrary.dir
-/home/basia/Desktop/genetic-algorithms/EA/build/CMakeFiles/test.dir
-/home/basia/Desktop/genetic-algorithms/EA/build/CMakeFiles/edit_cache.dir
-/home/basia/Desktop/genetic-algorithms/EA/build/CMakeFiles/rebuild_cache.dir

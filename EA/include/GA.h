@@ -4,6 +4,7 @@
 #include "./Mutation/Mutation.h"
 #include "./Scaling/Scaling.h"
 #include "./Selection/Selection.h"
+#include "./PenaltyFunction/PenaltyFunction.h"
 
 #include <algorithm>
 #include <functional>
@@ -23,6 +24,7 @@ private:
   std::shared_ptr<Crossover<ChromosomeType>> m_crossover;
   std::shared_ptr<Mutation<ChromosomeType>> m_mutation;
   std::shared_ptr<Selection<double>> m_selection;
+  std::shared_ptr<PenaltyFunction<double>> m_penaltyFunction;
 
   std::vector<double> m_min;
   std::vector<double> m_max;
@@ -48,6 +50,10 @@ public:
     std::vector<std::vector<ChromosomeType>> chromosomes;
     std::vector<double> fitnessValues;
   } m_population;
+
+  inline void set_m_penaltyFunction(std::shared_ptr<PenaltyFunction<double>> penaltyFunction) {
+    m_penaltyFunction = penaltyFunction;
+  }
 
   inline void set_m_scaling(std::shared_ptr<Scaling<double>> scaling) {
     m_scaling = scaling;
@@ -246,6 +252,15 @@ std::pair<double, std::vector<ChromosomeType>> GA<ChromosomeType>::run() {
       }
 
       // skalowanie
+
+        m_scaling->scaling(actualMatingPool.get().fitnessValues);
+      
+      //penaltyFunction
+      #pragma omp parallel for schedule(static)
+      for(size_t idx=0; idx<m_popSize; idx++)
+      {
+          m_penaltyFunction->penaltyFunction(gen, actualMatingPool.get().fitnessValues[idx], actualMatingPool.get().chromosomes[idx]);
+      }
       // obliczanie fitness value+ wybranie nowego maxCurrent z gen
       maxCurrent = actualMatingPool.get().fitnessValues.front();
       std::transform(actualMatingPool.get().chromosomes.begin(),
