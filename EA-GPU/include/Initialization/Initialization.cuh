@@ -12,7 +12,7 @@ namespace cea
             setGlobalSeed();
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
-            Initialization_<<<gridSize, blockSize>>>(Population);
+            UniformInitialization_<<<gridSize, blockSize,0,streams[omp_get_thread_num()]>>>(Population);
 
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
@@ -25,7 +25,7 @@ namespace cea
     };
 
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    __global__ void Initialization_(PopulationType<PopSize, ChromosomeSize>* Population)
+    __global__ void UniformInitialization_(PopulationType<PopSize, ChromosomeSize>* Population)
     {
         uint64_t idx = blockDim.x * blockIdx.x + threadIdx.x;
         if (idx >= PopSize) return; 

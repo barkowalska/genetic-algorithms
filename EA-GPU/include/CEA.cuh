@@ -7,6 +7,7 @@
 #include<random>
 #include <omp.h>
 #include<array>
+#include<vector>
 #include <algorithm>
 
 // dodac do crosss na poczatku spr pc jak w mutation
@@ -169,6 +170,14 @@ class Migration{
     virtual void operator()(PopulationType<PopSize,ChromosomeSize>** Population) = 0;
 };
 
+template<uint64_t PopSize, uint64_t ChromosomeSize>
+class Scaling{
+    public:
+    Scaling(){ }
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>** MatingPool) = 0;
+};
+
+std::vector<cudaStream_t> streams;
 template<uint64_t IslandNum, uint64_t PopSize, uint64_t ChromosomeSize>
 class CEA
 {
@@ -211,7 +220,7 @@ class CEA
     // Operator migracji
     inline void setMigration(std::shared_ptr<Migration<IslandNum, PopSize, ChromosomeSize>> migration) { m_migration = migration; }
 
-
+    
 
 
     PopulationType<PopSize,ChromosomeSize>* Population[IslandNum];
@@ -228,6 +237,11 @@ class CEA
             CHECK(cudaMalloc(&Selected[i], PopSize * sizeof(uint64_t)));
         } 
         CHECK(cudaMemcpyToSymbol(FitnessFunction, &fitnessFunction, sizeof(fitnessFunction_ptr)));
+        streams.resize(IslandNum);
+        for(int i=0; i<IslandNum; i++) 
+        {
+		    CHECK(cudaStreamCreate(&streams[i]));
+    	}
     }
 
     void setContraints(double* min, double* max)
@@ -245,6 +259,9 @@ class CEA
             CHECK(cudaFree(Population[i]));
             CHECK(cudaFree(MatingPool[i]));
             CHECK(cudaFree(Selected[i]));
+
+		    CHECK(cudaStreamDestroy(streams[i]));
+
         }
     }
 

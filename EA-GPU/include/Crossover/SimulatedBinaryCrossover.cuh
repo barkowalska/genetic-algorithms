@@ -64,7 +64,7 @@ namespace cea
                 // Launch CUDA kernel for crossover
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();
-                SimulatedBinaryCrossover_<<<gridSize,blockSize>>>(Population, MatingPool, Selected, m_Pc, m_n);
+                SimulatedBinaryCrossover_<<<gridSize,blockSize, 0,streams[omp_get_thread_num()]>>>(Population, MatingPool, Selected, m_Pc, m_n);
 
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();
