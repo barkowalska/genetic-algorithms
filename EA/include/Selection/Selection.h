@@ -22,7 +22,7 @@ public:
     To be implemented by derived classes with different selection strategies.
 */
   virtual std::vector<size_t> selection(const std::vector<T> &fitnessValue) = 0;
-
+  
   /*
       Constructor
       Initializes the random number generator for selection operations.

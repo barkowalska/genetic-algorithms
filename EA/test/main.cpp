@@ -4,8 +4,6 @@
 #include <vector>
 
 int main() {
-  // init
-  // funkcja celu?
   size_t popsize = 1000;
   size_t maxgen = 1000;
 

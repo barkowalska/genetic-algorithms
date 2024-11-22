@@ -30,6 +30,6 @@ public:
       - gen: Current generation number (not directly used in this class).
   */
   PolynominalMutation(double n, double Pm, std::vector<double> min,
-                      std::vector<double> max, size_t gen)
+                      std::vector<double> max)
       : m_n(n), Mutation(max, min, Pm) {}
 };

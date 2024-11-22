@@ -9,8 +9,7 @@ the parent gene range the new genes can be.
 */
 class BlendCrossover : public Crossover<double> {
 private:
-  double
-      alpha; // user-deﬁned parameter that controls the extent of the expansion
+  double alpha; // user-deﬁned parameter that controls the extent of the expansion
 
 public:
   /*
