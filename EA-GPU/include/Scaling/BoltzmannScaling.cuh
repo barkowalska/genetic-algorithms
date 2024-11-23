@@ -4,12 +4,12 @@
 namespace cea
 {
 template<uint64_t PopSize, uint64_t ChromosomeSize>
-__global__ void BoltzmannScaling_(PopulationType<PopSize,ChromosomeSize>* Population, double m_temperature)
+__global__ void BoltzmannScaling_(PopulationType<PopSize,ChromosomeSize>* MatingPool, double m_temperature)
 {
   uint64_t idx = blockDim.x * blockIdx.x + threadIdx.x;
   if (idx >= PopSize) return;
 
-   Population->fitnessValue[idx] =exp(Population->fitnessValue[idx] / m_temperature);
+   MatingPool->fitnessValue[idx] =exp(MatingPool->fitnessValue[idx] / m_temperature);
 
 
 }
@@ -21,12 +21,12 @@ class BoltzmannScaling: public Scaling<PopSize,ChromosomeSize>
   double m_temperature;// Temperature parameter for adjusting the scaling sensitivity
 
   BoltzmannScaling( double temperature = 1.0): m_temperature(temperature){}
-  void operator()(PopulationType<PopSize,ChromosomeSize>* Population) override
+  void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
   {
     setGlobalSeed();
       uint64_t gridSize = Execution::CalculateGridSize(PopSize);
       uint64_t blockSize = Execution::GetBlockSize();
-      BoltzmannScaling_<<<gridSize,blockSize>>>(Population, m_temperature);
+      BoltzmannScaling_<<<gridSize,blockSize>>>(MatingPool, m_temperature);
   }
 
 };

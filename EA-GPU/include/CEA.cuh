@@ -157,6 +157,13 @@ class Mutation{
 };
 
 template<uint64_t PopSize, uint64_t ChromosomeSize>
+class PenaltyFunction{
+    public:
+    PenaltyFunction() { }
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t gen) = 0;
+};
+
+template<uint64_t PopSize, uint64_t ChromosomeSize>
 class Initialization{
     public:
     Initialization() {}
@@ -174,7 +181,7 @@ template<uint64_t PopSize, uint64_t ChromosomeSize>
 class Scaling{
     public:
     Scaling(){ }
-    virtual void operator()(PopulationType<PopSize,ChromosomeSize>** MatingPool) = 0;
+    virtual void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) = 0;
 };
 
 std::vector<cudaStream_t> streams;
@@ -195,6 +202,9 @@ class CEA
     std::shared_ptr<Selection<PopSize, ChromosomeSize>> m_selection;
     std::shared_ptr<Initialization<PopSize, ChromosomeSize>> m_initialization;
     std::shared_ptr<Migration<IslandNum, PopSize, ChromosomeSize>> m_migration;
+    std::shared_ptr<PenaltyFunction<PopSize, ChromosomeSize>> m_penaltyFunction;
+    std::shared_ptr<Scaling<PopSize, ChromosomeSize>> m_scaling;
+
     static_assert((PopSize % 2) == 0);
 
     
@@ -219,8 +229,10 @@ class CEA
     inline void setInitialization(std::shared_ptr<Initialization<PopSize, ChromosomeSize>> initialization) { m_initialization = initialization; }
     // Operator migracji
     inline void setMigration(std::shared_ptr<Migration<IslandNum, PopSize, ChromosomeSize>> migration) { m_migration = migration; }
-
-    
+    // Operator penaltyFunction
+    inline void setPenaltyFunction(std::shared_ptr<PenaltyFunction<PopSize, ChromosomeSize>> penaltyFunction ) { m_penaltyFunction=penaltyFunction; }
+    // Operator skalowania
+    inline void setScaling(std::shared_ptr<Scaling<PopSize, ChromosomeSize>> scaling) { m_scaling = scaling; }
 
 
     PopulationType<PopSize,ChromosomeSize>* Population[IslandNum];
@@ -293,9 +305,9 @@ class CEA
             bool finished = false;
             (*m_initialization)(population_);
 
-            for(uint64_t i=0; i<maxgen && finishedCounter < omp_get_num_threads(); i++)
+            for(uint64_t gen=0; gen<maxgen && finishedCounter < omp_get_num_threads(); gen++)
             {
-                if(i==migrationPoints[k])
+                if(gen==migrationPoints[k])
                 {
                     #pragma omp barrier
                     k++;
@@ -310,7 +322,8 @@ class CEA
                     (*m_selection)(population_, selected_);
                     (*m_crossover)(population_, matingPool_, selected_);
                     (*m_mutation)(matingPool_);
-
+                    (*m_scaling)(matingPool_);
+                    (*m_penaltyFunction)(matingPool_, gen);
                     evaluateFitnessFunction<PopSize, ChromosomeSize><<<Execution::CalculateGridSize(PopSize), Execution::GetBlockSize()>>>(matingPool_);
                     findBest<IslandNum, PopSize,ChromosomeSize><<<1,1>>>(population_, omp_get_thread_num());
                     CHECK(cudaDeviceSynchronize());

@@ -7,6 +7,7 @@
 #include "Selection/BoltzmannTournamentSelection.cuh"
 #include "Selection/SelectionSUS.cuh"
 #include "Selection/TournamentSelection.cuh"
+
 #include "Mutation/BoundryMutation.cuh"
 #include "Mutation/CauchyMutation.cuh"
 #include "Mutation/NonuniformMutation.cuh"
@@ -16,3 +17,9 @@
 #include "Migration/Migration.cuh"
 
 #include "Initialization/Initialization.cuh"
+
+#include "Scaling/BoltzmannScaling.cuh"
+//#include "Scaling/FitnessTransferral.cuh"
+#include "Scaling/PowerLawScaling.cuh"
+
+#include "PenaltyFunction/DynamicPenaltyFunction.cuh"
