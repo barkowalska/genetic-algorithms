@@ -57,7 +57,7 @@ namespace cea
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();
                 //ArithmeticCrossover_<<<gridSize, blockSize,0,omp_get_thread_num()>>>(Population, MatingPool, Selected);
-                ArithmeticCrossover_<<<gridSize, blockSize>>>(Population, MatingPool, Selected);
+                ArithmeticCrossover_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(Population, MatingPool, Selected);
                 cudaError_t err = cudaGetLastError(); 
                 if (err != cudaSuccess) {
                     std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;

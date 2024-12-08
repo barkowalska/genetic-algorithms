@@ -26,7 +26,7 @@ class PowerLawScaling: public Scaling<PopSize,ChromosomeSize>
     setGlobalSeed();
       uint64_t gridSize = Execution::CalculateGridSize(PopSize);
       uint64_t blockSize = Execution::GetBlockSize();
-      LinearScaling_<<<gridSize,blockSize>>>(MatingPool, m_alpha);
+      LinearScaling_<<<gridSize,blockSize,0,streams[omp_get_thread_num()] >>>(MatingPool, m_alpha);
   }
 
 };

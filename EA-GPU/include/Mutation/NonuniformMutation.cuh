@@ -45,7 +45,7 @@ namespace cea
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
 
-            NonuniformMutation_<<<gridSize, blockSize>>>(MatingPool, m_maxgen, m_b, m_gen);
+            NonuniformMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_maxgen, m_b, m_gen);
 
              cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {

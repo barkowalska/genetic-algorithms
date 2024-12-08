@@ -46,7 +46,7 @@ namespace cea
             setGlobalSeed();
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();
-                BlendCrossover_<<<gridSize, blockSize>>>(Population, MatingPool, Selected, m_alpha);
+                BlendCrossover_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(Population, MatingPool, Selected, m_alpha);
         
                 // Check for kernel launch errors
             cudaError_t err = cudaGetLastError();

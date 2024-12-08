@@ -39,7 +39,7 @@ namespace cea
             setGlobalSeed();
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
-            CauchyMutation_<<<gridSize, blockSize>>>(MatingPool, m_sigma);
+            CauchyMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_sigma);
 
              cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {

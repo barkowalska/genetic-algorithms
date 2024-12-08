@@ -62,7 +62,7 @@ class BoltzmannTournamentSelection : public Selection<PopSize, ChromosomeSize>
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
             // Launch CUDA kernel for selection
-            BoltzmannTournamentSelection_<<<gridSize, blockSize>>>(Population, Selected, m_tournamentSize, m_t);
+            BoltzmannTournamentSelection_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(Population, Selected, m_tournamentSize, m_t);
 
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {

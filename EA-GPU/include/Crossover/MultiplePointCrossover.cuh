@@ -78,7 +78,7 @@ namespace cea
                 // Launch CUDA kernel for crossover
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();
-                MultiplePointCrossover_<<<gridSize, blockSize, (m_numOfPoints+1) * sizeof(uint64_t)>>>(Population, MatingPool, Selected, m_numOfPoints);
+                MultiplePointCrossover_<<<gridSize, blockSize, (m_numOfPoints+1) * sizeof(uint64_t),streams[omp_get_thread_num()]>>>(Population, MatingPool, Selected, m_numOfPoints);
             
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();

@@ -26,7 +26,7 @@ class BoltzmannScaling: public Scaling<PopSize,ChromosomeSize>
     setGlobalSeed();
       uint64_t gridSize = Execution::CalculateGridSize(PopSize);
       uint64_t blockSize = Execution::GetBlockSize();
-      BoltzmannScaling_<<<gridSize,blockSize>>>(MatingPool, m_temperature);
+      BoltzmannScaling_<<<gridSize,blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_temperature);
   }
 
 };

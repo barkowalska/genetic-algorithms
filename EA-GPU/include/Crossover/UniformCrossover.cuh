@@ -44,7 +44,7 @@ namespace cea
 
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();
-                UniformCrossover_<<<gridSize, blockSize>>>(Population, MatingPool, Selected);
+                UniformCrossover_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(Population, MatingPool, Selected);
 
                 // Check for kernel launch errors
                 cudaError_t err = cudaGetLastError();

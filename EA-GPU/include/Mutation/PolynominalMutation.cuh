@@ -41,7 +41,7 @@ namespace cea
 
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
-            PolynominalMutation_<<<gridSize, blockSize>>>(MatingPool, m_n);
+            PolynominalMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_n);
 
              cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
