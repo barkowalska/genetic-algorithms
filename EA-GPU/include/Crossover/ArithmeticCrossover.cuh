@@ -17,8 +17,8 @@ namespace cea
         double* parent_A = &Population->chromosomes[Selected[idx] * ChromosomeSize];
         double* parent_B = &Population->chromosomes[Selected[idx + 1] * ChromosomeSize];
 
-        double* child_A = &MatingPool->chromosomes[Selected[idx] * ChromosomeSize];
-        double* child_B = &MatingPool->chromosomes[Selected[idx + 1] * ChromosomeSize];
+        double* child_A = &MatingPool->chromosomes[idx * ChromosomeSize];
+        double* child_B = &MatingPool->chromosomes[(idx + 1) * ChromosomeSize];
 
         for (uint64_t i = 0; i < ChromosomeSize; i++)
         {

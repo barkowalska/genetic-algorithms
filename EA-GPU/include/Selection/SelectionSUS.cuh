@@ -49,7 +49,7 @@ class SelectionSUS : public Selection<PopSize, ChromosomeSize>
     {
         setGlobalSeed();
         // Launch the kernel with one block and one thread
-        SelectionSUS_<<<1, 1>>>(Population, Selected);
+        SelectionSUS_<<<1, 1, 0,streams[omp_get_thread_num()]>>>(Population, Selected);
         // Synchronize to ensure kernel completion
         cudaDeviceSynchronize();
     }

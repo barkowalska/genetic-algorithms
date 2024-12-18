@@ -35,7 +35,7 @@ class TournamentSelection: public Selection<PopSize,ChromosomeSize>
     setGlobalSeed();
       uint64_t gridSize = Execution::CalculateGridSize(PopSize);
       uint64_t blockSize = Execution::GetBlockSize();
-      TournamentSelection_<<<gridSize,blockSize,0,streams[omp_get_thread_num()] >>>(Population, Selected, m_tournamentSize);
+      TournamentSelection_<<<gridSize,blockSize, 0,streams[omp_get_thread_num()] >>>(Population, Selected, m_tournamentSize);
   }
 
 };

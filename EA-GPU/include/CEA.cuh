@@ -8,6 +8,7 @@
 #include <omp.h>
 #include<array>
 #include<vector>
+#include<chrono>
 #include <algorithm>
 
 // dodac do crosss na poczatku spr pc jak w mutation
@@ -47,7 +48,7 @@ struct BestIdx
     double value;
 };
 
-__constant__ double ProbabilityMutation;
+__constant__ double ProbabilityMutation=0.01;
 
 template<uint64_t ChromosomeSize>
 __constant__ double MIN[ChromosomeSize]; 
@@ -234,6 +235,10 @@ class CEA
     // Operator skalowania
     inline void setScaling(std::shared_ptr<Scaling<PopSize, ChromosomeSize>> scaling) { m_scaling = scaling; }
 
+    inline void setMutationProbablility(double mutationProbability){
+        cudaMemcpyToSymbol(ProbabilityMutation,&mutationProbability,sizeof(double));
+    }
+
 
     PopulationType<PopSize,ChromosomeSize>* Population[IslandNum];
     PopulationType<PopSize,ChromosomeSize>* MatingPool[IslandNum];
@@ -277,15 +282,26 @@ class CEA
         }
     }
 
-
-
-    std::pair<double, std::array<double, ChromosomeSize>> run()
+    
+    struct Result
     {
+        std::array<uint64_t, IslandNum> generationNumber{0};
+        std::pair<double, std::array<double, ChromosomeSize>> best;
+
+        std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+        std::chrono::time_point<std::chrono::high_resolution_clock> endTime;
+    };
+
+    Result run()
+    {
+        Result result;
+
         std::mt19937 m_generator(std::random_device{}());
         std::uniform_int_distribution<uint64_t> m_distribution(0, maxgen);
 
         std::vector<uint64_t> migrationPoints;
 
+        if(IslandNum > 1)
         for(int i=0; i<maxgen*m_ProbabilityMigration; i++)
         {
             migrationPoints.push_back(m_distribution(m_generator));
@@ -293,6 +309,11 @@ class CEA
         std::sort(migrationPoints.begin(), migrationPoints.end());
         int k=0;
         int finishedCounter = 0;
+        cudaGraph_t graph;
+        cudaGraphExec_t instance;
+        bool graphIs = false;
+
+        auto start = std::chrono::high_resolution_clock::now();
 
         #pragma omp parallel firstprivate(k) num_threads(IslandNum)
         {
@@ -304,37 +325,40 @@ class CEA
             BestIdx old;
             bool finished = false;
             (*m_initialization)(population_);
-
-            for(uint64_t gen=0; gen<maxgen && finishedCounter < omp_get_num_threads(); gen++)
+            uint64_t gen = 0;
+            for(gen=0; (gen<maxgen) && (finishedCounter < IslandNum); gen++)
             {
-                if(gen==migrationPoints[k])
+                if(IslandNum > 1 && gen==migrationPoints[k])
                 {
                     #pragma omp barrier
                     k++;
                     #pragma omp single
                     {
-                        (*m_migration)(Population);
+                        //(*m_migration)(Population);
   
                     }
 
                 }
                 if(!finished){
-                    (*m_selection)(population_, selected_);
-                    (*m_crossover)(population_, matingPool_, selected_);
-                    (*m_mutation)(matingPool_);
-                    (*m_scaling)(matingPool_);
-                    (*m_penaltyFunction)(matingPool_, gen);
-                    evaluateFitnessFunction<PopSize, ChromosomeSize><<<Execution::CalculateGridSize(PopSize), Execution::GetBlockSize()>>>(matingPool_);
-                    findBest<IslandNum, PopSize,ChromosomeSize><<<1,1>>>(population_, omp_get_thread_num());
-                    CHECK(cudaDeviceSynchronize());
+                    if(graphIs == false){
+                        (*m_selection)(population_, selected_);
+                        (*m_crossover)(population_, matingPool_, selected_);
+                        (*m_mutation)(matingPool_);
+                        (*m_scaling)(matingPool_);
+                        (*m_penaltyFunction)(matingPool_, gen);
+                        evaluateFitnessFunction<PopSize, ChromosomeSize><<<Execution::CalculateGridSize(PopSize), Execution::GetBlockSize(),0,streams[omp_get_thread_num()]>>>(matingPool_);
+                        findBest<IslandNum, PopSize,ChromosomeSize><<<1,1,0,streams[omp_get_thread_num()]>>>(population_, omp_get_thread_num());
+                    }
+
 
                     CHECK(cudaMemcpyFromSymbol(&current, CurrentBest<IslandNum>, sizeof(BestIdx), sizeof(BestIdx)*omp_get_thread_num()));
                     CHECK(cudaMemcpyFromSymbol(&old, OldBest<IslandNum>, sizeof(BestIdx), sizeof(BestIdx)*omp_get_thread_num()));
-                    
-                    if ((old.value != 0.0 ? (fabs(current.value - old.value) / old.value) : fabs(current.value - old.value)) < m_epsilon) {
+                    double diff = (old.value != 0.0) ? fabs((current.value - old.value) / old.value) : fabs(current.value - old.value);
+                    if ( diff < m_epsilon) {
                     counterMaxElements++;
                     if (counterMaxElements > m_numMaxElements) {
                         finished = true;
+                        result.generationNumber[omp_get_thread_num()] = gen;
                         #pragma omp atomic
                         finishedCounter++;
                     }   
@@ -343,6 +367,9 @@ class CEA
                     }
                     std::swap(population_, matingPool_);
                 }
+            }
+            if(result.generationNumber[omp_get_thread_num()] == 0){
+                    result.generationNumber[omp_get_thread_num()] = gen;
             }
         }
 
@@ -367,11 +394,16 @@ class CEA
         std::pair<double, std::array<double, ChromosomeSize>> wynik (fitness_host, chromosome);
         PopulationType<PopSize,ChromosomeSize> h_population;
         CHECK(cudaMemcpy(&h_population, Population[0], sizeof(PopulationType<PopSize,ChromosomeSize>), cudaMemcpyDeviceToHost));
-        //std::pair<double, std::array<double, ChromosomeSize>> wynik;
+
+        auto stop = std::chrono::high_resolution_clock::now();
+        result.best = wynik;
+        result.startTime=start;
+        result.endTime=stop;
+
         cudaFree(populations);
         cudaFree(dest);
         cudaFree(fitnessValue);
-        return wynik;
+        return result;
     }
 };
 

@@ -6,7 +6,7 @@ namespace cea
 {
 
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    __global__ void UniformCrossover_(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected, double m_Pc, double m_n)
+    __global__ void UniformCrossover_(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected)
     {
         unsigned int idx = 2 * (blockDim.x * blockIdx.x + threadIdx.x);
         if (idx >= PopSize || idx + 1 >= PopSize) return; 
@@ -17,8 +17,8 @@ namespace cea
         double* parent_A = &Population->chromosomes[Selected[idx] * ChromosomeSize];
         double* parent_B = &Population->chromosomes[Selected[idx + 1] * ChromosomeSize];
 
-        double* child_A = &MatingPool->chromosomes[Selected[idx] * ChromosomeSize];
-        double* child_B = &MatingPool->chromosomes[Selected[idx + 1] * ChromosomeSize];
+        double* child_A = &MatingPool->chromosomes[idx * ChromosomeSize];
+        double* child_B = &MatingPool->chromosomes[(idx + 1)* ChromosomeSize];
 
         for (uint64_t i = 0; i < ChromosomeSize; i++)
         {
