@@ -12,15 +12,13 @@ __global__ void BoltzmannTournamentSelection_(PopulationType<PopSize, Chromosome
     uint64_t idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= PopSize) return;
 
-    curandState state;
-    curand_init(seed, idx, 0, &state);
 
-    uint64_t best = static_cast<uint64_t>(curand_uniform_double(&state) * PopSize);
+    uint64_t best = static_cast<uint64_t>(HybridTaus(clock(),idx,clock(),idx)* PopSize);
     for (uint64_t i = 0; i < m_tournamentSize; i++)
     {
-        uint64_t k = static_cast<uint64_t>(curand_uniform(&state) * PopSize);
+        uint64_t k = static_cast<uint64_t>(HybridTaus(clock(),idx,clock(),idx)* PopSize);
         double pi = 1.0 / (1.0 + exp((Population->fitnessValue[k] - Population->fitnessValue[best]) / m_t));
-        double rand = curand_uniform_double(&state);
+        double rand = HybridTaus(clock(),idx,clock(),idx);
         if (rand > pi) {
             best = k;
         }
@@ -57,7 +55,6 @@ class BoltzmannTournamentSelection : public Selection<PopSize, ChromosomeSize>
         */
         void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) override
         {
-            setGlobalSeed();
 
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();

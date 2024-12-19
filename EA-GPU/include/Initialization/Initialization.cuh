@@ -7,12 +7,11 @@ namespace cea
     class UniformInitialization : public Initialization<PopSize, ChromosomeSize> 
     {
         public:
-        void operator()(PopulationType<PopSize, ChromosomeSize>* Population) override
+        void operator()(PopulationType<PopSize, ChromosomeSize>* Population, double* PopulationDataToMax) override
         {
-            setGlobalSeed();
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
-            UniformInitialization_<<<gridSize, blockSize,0,streams[omp_get_thread_num()]>>>(Population);
+            UniformInitialization_<<<gridSize, blockSize,0,streams[omp_get_thread_num()]>>>(Population, PopulationDataToMax);
 
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
@@ -25,20 +24,20 @@ namespace cea
     };
 
     template<uint64_t PopSize, uint64_t ChromosomeSize>
-    __global__ void UniformInitialization_(PopulationType<PopSize, ChromosomeSize>* Population)
+    __global__ void UniformInitialization_(PopulationType<PopSize, ChromosomeSize>* Population, double* PopulationDataToMax)
     {
         uint64_t idx = blockDim.x * blockIdx.x + threadIdx.x;
         if (idx >= PopSize) return; 
 
-        curandState state;
-        curand_init(seed, idx, 0, &state);
         for(uint64_t i=0; i<ChromosomeSize; i++)
         {
-            double rand=curand_uniform_double(&state);
+            double rand=HybridTaus(clock(),idx,clock(),idx);
             Population->chromosomes[idx*ChromosomeSize+i]=rand*(MAX<ChromosomeSize>[i]-MIN<ChromosomeSize>[i])+MIN<ChromosomeSize>[i];
         }        
         Population->fitnessValue[idx]=FitnessFunction(&Population->chromosomes[idx*ChromosomeSize]);
-        
+
+
+        PopulationDataToMax[idx]=Population->fitnessValue[idx];
 
     }
 }

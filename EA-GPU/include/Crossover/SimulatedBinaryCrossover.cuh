@@ -11,20 +11,19 @@ namespace cea
     unsigned int idx = 2 * (blockDim.x * blockIdx.x + threadIdx.x);
     if (idx >= PopSize || idx + 1 >= PopSize) return; 
 
-    curandState state;
-    curand_init(seed, idx, 0, &state);
+
 
     double* parent_A = &Population->chromosomes[Selected[idx] * ChromosomeSize];
     double* parent_B = &Population->chromosomes[Selected[idx + 1] * ChromosomeSize];
  
-    double* child_A = &MatingPool->chromosomes[Selected[idx] * ChromosomeSize];
-    double* child_B = &MatingPool->chromosomes[Selected[idx + 1] * ChromosomeSize];
+    double* child_A = &MatingPool->chromosomes[(idx) * ChromosomeSize];
+    double* child_B = &MatingPool->chromosomes[(idx+1)* ChromosomeSize];
 
         for (uint64_t i = 0; i < ChromosomeSize; i++)
         {
-            double u = curand_uniform_double(&state);
+            double u = HybridTaus(clock(),idx,clock(),idx);
             double beta = (u <= 0.5) * pow(2.0 * u, 1.0 / (m_n + 1.0)) + (u < 0.5) * pow(1.0 / (2.0 * (1.0 - u)), 1.0 / (m_n + 1.0));
-            bool crossover = (curand_uniform_double(&state) <= m_Pc);
+            bool crossover = (HybridTaus(clock(),idx,clock(),idx) <= m_Pc);
             child_A[i] = crossover * (0.5 * (parent_A[i] + parent_B[i]) + 0.5 * beta * (parent_A[i] - parent_B[i])) + (!crossover) * parent_A[i];
             child_B[i] = crossover * (0.5 * (parent_A[i] + parent_B[i]) + 0.5 * beta * (parent_B[i] - parent_A[i])) + (!crossover) * parent_B[i];
         }
@@ -60,7 +59,6 @@ namespace cea
             */
             void operator()(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected) override
             {
-                setGlobalSeed();
                 // Launch CUDA kernel for crossover
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();

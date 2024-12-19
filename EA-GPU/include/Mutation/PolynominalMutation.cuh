@@ -10,15 +10,13 @@ namespace cea
         uint64_t idx=blockDim.x*blockIdx.x+threadIdx.x;
         if (idx >= PopSize) return; 
 
-        curandState state;
-        curand_init(seed, idx, 0, &state);
         double* chromosome = &MatingPool->chromosomes[idx * ChromosomeSize];
 
         for(uint64_t i=0; i<ChromosomeSize; i++)
         {
             double delta_max = MAX<ChromosomeSize>[i] - MIN<ChromosomeSize>[i];
-            double randPm = curand_uniform_double(&state);
-            double rand = curand_uniform_double(&state);
+            double randPm = HybridTaus(clock(),idx,clock(),idx);
+            double rand = HybridTaus(clock(),idx,clock(),idx);
             double delta_q=(rand<0.5)*(pow(2.0 * rand, 1.0 / m_n + 1.0) - 1.0)+(rand>=0.5)*(1.0 - pow(2 * (1 - rand), 1 / m_n + 1.0));
             chromosome[i]=chromosome[i] + (randPm<ProbabilityMutation)*delta_max*delta_q;
         }
@@ -36,14 +34,11 @@ namespace cea
 
         void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
         {
-
-            setGlobalSeed();
-
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
             PolynominalMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_n);
 
-             cudaError_t err = cudaGetLastError();
+            cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                     std::cout<<"CUDA Error: "<< cudaGetErrorString(err)<< std::endl;
             }

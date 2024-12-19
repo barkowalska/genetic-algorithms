@@ -10,14 +10,12 @@ namespace cea
         uint64_t idx=blockDim.x*blockIdx.x+threadIdx.x;
         if (idx >= PopSize) return; 
 
-        curandState state;
-        curand_init(seed, idx, 0, &state);
 
         double* chromosome = &MatingPool->chromosomes[idx * ChromosomeSize];
         for(uint64_t i=0; i<ChromosomeSize; i++)
         {
-            double randPm=curand_uniform_double(&state);
-            double change=curand_uniform_double(&state)*(MAX<ChromosomeSize>[i]-MIN<ChromosomeSize>[i])+MIN<ChromosomeSize>[i];
+            double randPm=HybridTaus(clock(),idx,clock(),idx);
+            double change=HybridTaus(clock(),idx,clock(),idx)*(MAX<ChromosomeSize>[i]-MIN<ChromosomeSize>[i])+MIN<ChromosomeSize>[i];
             chromosome[i]=chromosome[i]*(randPm>=ProbabilityMutation)+(randPm<ProbabilityMutation)*change;
         }
 
@@ -31,7 +29,6 @@ namespace cea
     public:
         void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
         {
-            setGlobalSeed();
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
             UniformMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool);

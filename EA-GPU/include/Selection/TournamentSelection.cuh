@@ -10,13 +10,12 @@ __global__ void TournamentSelection_(PopulationType<PopSize,ChromosomeSize>* Pop
   uint64_t idx = blockDim.x * blockIdx.x + threadIdx.x;
   if (idx >= PopSize) return;
 
-  curandState state;
-  curand_init(seed, idx, 0, &state);
 
-  uint64_t best=static_cast<uint64_t>(curand_uniform(&state)* PopSize);
+
+  uint64_t best=static_cast<uint64_t>(HybridTaus(clock(),idx,clock(),idx));
   for(uint64_t i=0; i<m_tournamentSize; i++)
   {
-    uint64_t k= static_cast<uint64_t>(curand_uniform(&state)* PopSize);
+    uint64_t k= static_cast<uint64_t>(HybridTaus(clock(),idx,clock(),idx)* PopSize);
     if (Population->fitnessValue[k] > Population->fitnessValue[best]) best = k;
   }
   Selected[idx] = best;
@@ -32,7 +31,6 @@ class TournamentSelection: public Selection<PopSize,ChromosomeSize>
   TournamentSelection( uint64_t tournamentSize=2): m_tournamentSize(tournamentSize){}
   void operator()(PopulationType<PopSize,ChromosomeSize>* Population, uint64_t* Selected) override
   {
-    setGlobalSeed();
       uint64_t gridSize = Execution::CalculateGridSize(PopSize);
       uint64_t blockSize = Execution::GetBlockSize();
       TournamentSelection_<<<gridSize,blockSize, 0,streams[omp_get_thread_num()] >>>(Population, Selected, m_tournamentSize);

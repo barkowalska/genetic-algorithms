@@ -25,8 +25,6 @@ __global__ void DynamicPenaltyFunction_(PopulationType<PopSize, ChromosomeSize>*
     penalty =penalty* dynamicFactor;
 
     MatingPool->fitnessValue[idx] += penalty;
-
-
 }
 
 template<uint64_t PopSize, uint64_t ChromosomeSize>
@@ -42,7 +40,6 @@ class DynamicPenaltyFunction : public PenaltyFunction<PopSize, ChromosomeSize>
 
     void operator()(PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t gen) override
     {
-    setGlobalSeed();
 
     uint64_t gridSize = Execution::CalculateGridSize(PopSize);
     uint64_t blockSize = Execution::GetBlockSize();

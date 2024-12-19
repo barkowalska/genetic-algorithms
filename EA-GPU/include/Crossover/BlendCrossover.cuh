@@ -12,8 +12,7 @@ namespace cea
         unsigned int idx=2*(blockDim.x*blockIdx.x+threadIdx.x);
         if (idx >= PopSize || idx+1>=PopSize) return; 
 
-        curandState state;
-        curand_init(seed, idx, 0, &state);
+
         double* parent_A = &Population->chromosomes[Selected[idx]*ChromosomeSize];
         double* parent_B = &Population->chromosomes[Selected[idx+1]*ChromosomeSize];
 
@@ -27,8 +26,8 @@ namespace cea
             double d = x2 - x1;
             double lower_bound = x1 - m_alpha * d;
             double upper_bound = x2 + m_alpha * d;            
-            child_A[i] = curand_uniform_double(&state)*(upper_bound-lower_bound)+lower_bound;
-            child_B[i] = curand_uniform_double(&state)*(upper_bound-lower_bound)+lower_bound; 
+            child_A[i] = HybridTaus(clock(),idx,clock(),idx)*(upper_bound-lower_bound)+lower_bound;
+            child_B[i] = HybridTaus(clock(),idx,clock(),idx)*(upper_bound-lower_bound)+lower_bound; 
         }
     }
 
@@ -43,7 +42,6 @@ namespace cea
         BlendCrossover(double alpha = 0.5) :  m_alpha(alpha){}
         void operator()(PopulationType<PopSize,ChromosomeSize>* Population, PopulationType<PopSize,ChromosomeSize>* MatingPool, uint64_t* Selected) override
         {
-            setGlobalSeed();
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();
                 BlendCrossover_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(Population, MatingPool, Selected, m_alpha);

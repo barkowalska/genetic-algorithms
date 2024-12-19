@@ -14,11 +14,9 @@ namespace cea
         unsigned int idx = threadIdx.x;
         if (idx >= PopSize ) return; 
 
-        curandState state;
-        curand_init(seed, 0, 0, &state);
 
         uint64_t range = (PopSize + blockDim.x - 1)/blockDim.x;
-        uint64_t chosenFitnessValue=curand_uniform_double(&state)*range + idx*range;
+        uint64_t chosenFitnessValue=HybridTaus(clock(),idx,clock(),idx)*range + idx*range;
         uint64_t chosenChromosomes=chosenFitnessValue*ChromosomeSize;
 
 
@@ -44,22 +42,20 @@ namespace cea
 
         std::mt19937 m_generator;
         std::uniform_int_distribution<uint64_t> m_distribution;
-    public:
-    RandomMigration() : m_generator(std::random_device{}()), m_distribution(0,PopSize){};
-    void operator()(PopulationType<PopSize,ChromosomeSize>** Population) override
-    {
-        setGlobalSeed();
-        std::vector<uint64_t> populations(IslandNum);
-        std::iota(populations.begin(), populations.end(),0);
-
-        std::shuffle(populations.begin(), populations.end(),m_generator);
-        uint64_t toMigrate=1;
-        for(uint64_t i =0; i+1<IslandNum; ++i)
+        public:
+        RandomMigration() : m_generator(std::random_device{}()), m_distribution(0,PopSize){};
+        void operator()(PopulationType<PopSize,ChromosomeSize>** Population) override
         {
-            toMigrate=m_distribution(m_generator);
-            RandomMigration_<<<1,toMigrate>>>(Population[populations[i]], Population[populations[i++]]);
-        }
-    }
+            std::vector<uint64_t> populations(IslandNum);
+            std::iota(populations.begin(), populations.end(),0);
 
+            std::shuffle(populations.begin(), populations.end(),m_generator);
+            uint64_t toMigrate=1;
+            for(uint64_t i =0; i+1<IslandNum; ++i)
+            {
+                toMigrate=m_distribution(m_generator);
+                RandomMigration_<<<1,toMigrate>>>(Population[populations[i]], Population[populations[i++]]);
+            }
+        }
     };
 }

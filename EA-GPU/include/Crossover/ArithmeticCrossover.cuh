@@ -11,8 +11,6 @@ namespace cea
         unsigned int idx = 2 * (blockDim.x * blockIdx.x + threadIdx.x);
         if (idx >= PopSize || idx + 1 >= PopSize) return; 
 
-        curandState state;
-        curand_init(seed, idx, 0, &state);
 
         double* parent_A = &Population->chromosomes[Selected[idx] * ChromosomeSize];
         double* parent_B = &Population->chromosomes[Selected[idx + 1] * ChromosomeSize];
@@ -22,7 +20,7 @@ namespace cea
 
         for (uint64_t i = 0; i < ChromosomeSize; i++)
         {
-            double alpha = curand_uniform_double(&state);
+            double alpha = HybridTaus(clock(),idx,clock(),idx);
             child_A[i] = alpha * parent_A[i] + (1.0 - alpha) * parent_B[i];
             child_B[i] = (1.0 - alpha) * parent_A[i] + alpha * parent_B[i]; 
         }
@@ -52,7 +50,6 @@ namespace cea
             */
             void operator()(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected) override
             {
-                setGlobalSeed();
 
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();

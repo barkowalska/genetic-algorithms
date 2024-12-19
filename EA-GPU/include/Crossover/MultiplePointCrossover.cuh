@@ -12,15 +12,14 @@ namespace cea
         unsigned int idx = 2 * (blockDim.x * blockIdx.x + threadIdx.x);
         if (idx >= PopSize || idx + 1 >= PopSize) return; 
 
-        curandState state;
-        curand_init(seed, idx, 0, &state);
 
         uint64_t section = ChromosomeSize / m_numOfPoints;
 
         // Allocate shared memory for crossover points
         extern __shared__ uint64_t crossoverPoints[];
-        for (uint64_t i = 0; i < m_numOfPoints; ++i) {
-            crossoverPoints[i] = curand_uniform_double(&state) * section + i * section;            
+        for (uint64_t i = 0; i < m_numOfPoints; ++i)
+        {
+            crossoverPoints[i] = (HybridTaus(clock(),idx,clock(),idx))* section + i * section;            
         }
         crossoverPoints[m_numOfPoints]=ChromosomeSize;
 
@@ -74,7 +73,6 @@ namespace cea
             */
             void operator()(PopulationType<PopSize, ChromosomeSize>* Population, PopulationType<PopSize, ChromosomeSize>* MatingPool, uint64_t* Selected) override
             {
-                setGlobalSeed();
                 // Launch CUDA kernel for crossover
                 uint64_t gridSize = Execution::CalculateGridSize(PopSize/2);
                 uint64_t blockSize = Execution::GetBlockSize();

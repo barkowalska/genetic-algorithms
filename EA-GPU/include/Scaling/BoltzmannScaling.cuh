@@ -17,17 +17,16 @@ __global__ void BoltzmannScaling_(PopulationType<PopSize,ChromosomeSize>* Mating
 template<uint64_t PopSize, uint64_t ChromosomeSize>
 class BoltzmannScaling: public Scaling<PopSize,ChromosomeSize>
 {
-  public:
-  double m_temperature;// Temperature parameter for adjusting the scaling sensitivity
+    public:
+    double m_temperature;// Temperature parameter for adjusting the scaling sensitivity
 
-  BoltzmannScaling( double temperature = 1.0): m_temperature(temperature){}
-  void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
-  {
-    setGlobalSeed();
+    BoltzmannScaling( double temperature = 1.0): m_temperature(temperature){}
+    void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
+    {
       uint64_t gridSize = Execution::CalculateGridSize(PopSize);
       uint64_t blockSize = Execution::GetBlockSize();
-      BoltzmannScaling_<<<gridSize,blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_temperature);
-  }
+     BoltzmannScaling_<<<gridSize,blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_temperature);
+    }
 
-};
+  };
 }
