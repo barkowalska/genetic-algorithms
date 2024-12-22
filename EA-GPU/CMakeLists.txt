@@ -8,19 +8,6 @@ set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 # Dodanie katalogów nagłówkowych
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-# Włączenie testowania
-enable_testing()
-
-# Dołączenie GoogleTest za pomocą FetchContent
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/release-1.12.1.zip
-)
-# Dla Windows: Zapobieganie nadpisywaniu ustawień kompilatora/linkera projektu nadrzędnego
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(googletest)
-
 # Znalezienie OpenMP
 find_package(OpenMP REQUIRED)
 
@@ -38,6 +25,12 @@ set_target_properties(main PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
 )
 
+# Ustawienie katalogów wyjściowych dla trybów Debug i Release
+set_target_properties(main PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release
+)
+
 # Linkowanie OpenMP do docelowego pliku wykonywalnego
 target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
 
@@ -49,15 +42,20 @@ target_compile_options(main PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=${OpenMP_CXX_FLAGS}>
 )
 
-# Enable debugging symbols for CUDA
-set(CMAKE_CUDA_FLAGS_DEBUG "-G -g")
+# Opcje debugowania i optymalizacji
+set(CMAKE_CUDA_FLAGS_DEBUG "-G -g -lineinfo") # Debug: szczegółowe debugowanie
+set(CMAKE_CUDA_FLAGS_RELEASE "-O3 -DNDEBUG")  # Release: pełna optymalizacja
 
-# Add debug flags to CUDA target
+# Konfiguracja build typów
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "" FORCE)
+
+# Ustawienie opcji kompilacji dla Debug i Release
 target_compile_options(main PRIVATE
-    $<$<COMPILE_LANGUAGE:CUDA>:-G -g -Xcompiler=-fopenmp>
+    $<$<CONFIG:Debug>:-G -g -Xcompiler=-fopenmp>           # Debug: szczegółowe debugowanie
+    $<$<CONFIG:Release>:-O3 -Xcompiler=-fopenmp>           # Release: optymalizacja
 )
 
-# Default to Debug build type if not specified
+# Domyślny typ kompilacji to Release, jeśli nie został określony
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
