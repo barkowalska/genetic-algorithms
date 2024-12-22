@@ -187,6 +187,8 @@ __global__ void bestOfAll(PopulationType<PopSize,ChromosomeSize>** Population, i
         virtual void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) = 0;
     };
 
+    inline std::vector<uint32_t> GenerationsNumber;
+
     std::vector<cudaStream_t> streams;
     template<uint64_t IslandNum, uint64_t PopSize, uint64_t ChromosomeSize>
     class CEA
@@ -259,6 +261,7 @@ __global__ void bestOfAll(PopulationType<PopSize,ChromosomeSize>** Population, i
             {
 		        CHECK(cudaStreamCreate(&streams[i]));
     	    }
+            GenerationsNumber.resize(IslandNum);
         }
 
         void setContraints(double* min, double* max)
@@ -292,8 +295,6 @@ __global__ void bestOfAll(PopulationType<PopSize,ChromosomeSize>** Population, i
         Result run()
         {
             Result result;
-
-            double IslandsMaxs[IslandNum*ChromosomeSize];// jedno wspoldzie
 
             std::mt19937 m_generator(std::random_device{}());
             std::uniform_int_distribution<uint64_t> m_distribution(0, maxgen);
@@ -357,6 +358,7 @@ __global__ void bestOfAll(PopulationType<PopSize,ChromosomeSize>** Population, i
 
                 for(gen=0; (gen<maxgen) && (finishedCounter < IslandNum); gen++)
                 {
+                    GenerationsNumber[omp_get_thread_num()] = gen;
                     if(IslandNum > 1 && gen==migrationPoints[k])
                     {
                         #pragma omp barrier

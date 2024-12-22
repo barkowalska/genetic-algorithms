@@ -35,15 +35,15 @@ namespace cea
         size_t m_maxgen; // Maximum number of generations
 
     public:
-        NonuniformMutation(uint64_t maxgen, double b, uint64_t gen)
-            : m_gen(gen), m_b(b), m_maxgen(maxgen) {}
+        NonuniformMutation(uint64_t maxgen, double b)
+            : m_b(b), m_maxgen(maxgen) {}
         void operator()(PopulationType<PopSize,ChromosomeSize>* MatingPool) override
         {
 
             uint64_t gridSize = Execution::CalculateGridSize(PopSize);
             uint64_t blockSize = Execution::GetBlockSize();
 
-            NonuniformMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_maxgen, m_b, m_gen);
+            NonuniformMutation_<<<gridSize, blockSize, 0,streams[omp_get_thread_num()]>>>(MatingPool, m_maxgen, m_b, GenerationsNumber[omp_get_thread_num()]);
 
              cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) 

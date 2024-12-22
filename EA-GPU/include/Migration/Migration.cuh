@@ -43,7 +43,7 @@ namespace cea
         std::mt19937 m_generator;
         std::uniform_int_distribution<uint64_t> m_distribution;
         public:
-        RandomMigration() : m_generator(std::random_device{}()), m_distribution(0,PopSize){};
+        RandomMigration() : m_generator(std::random_device{}()), m_distribution(1,Execution::GetBlockSize()){};
         void operator()(PopulationType<PopSize,ChromosomeSize>** Population) override
         {
             std::vector<uint64_t> populations(IslandNum);
